@@ -16,4 +16,6 @@ const config: Phaser.Types.Core.GameConfig = {
   scene: [GameScene, GameOverScene],
 };
 
+// Maybe put websockets functionality here? ISSUE 7
+
 export default new Phaser.Game(config);

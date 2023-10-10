@@ -6,6 +6,7 @@ export default class GameScene extends Phaser.Scene {
     super("game");
   }
 
+  // add types to variables ISSUE 14
   platforms: any;
   player: any;
   cursors: any;
@@ -17,7 +18,7 @@ export default class GameScene extends Phaser.Scene {
 
   preload() {
     // load music and sounds ISSUE 11
-    //this.load.audio("music", "assets/music.mp3");
+    // this.load.audio("music", "assets/music.mp3");
 
     this.load.image("sky", "assets/sky.png");
     this.load.image("ground", "assets/platform.png");
@@ -42,6 +43,9 @@ export default class GameScene extends Phaser.Scene {
     this.platforms.create(600, 400, "ground");
     this.platforms.create(50, 250, "ground");
     this.platforms.create(750, 220, "ground");
+
+    // add socket.io / partykit for multiplayer, I guess you have to say that this.player should be pushed to some kind of service/server/thing
+    // ISSUE 7
 
     // player dude
     this.player = this.physics.add.sprite(375, 100, "dude");
@@ -93,6 +97,15 @@ export default class GameScene extends Phaser.Scene {
     // check if player hits star - if yes trigger collectStar
     this.physics.add.overlap(this.player, this.stars, collectStar, null, this);
 
+    // example arrow function, from Robin's branch
+
+    //  const collectStar = (player: any, star: any) => {
+    // 	  star.disableBody(true, true);
+    // 	  this.score += 100;
+    // 	  this.scoreText.setText("Score: " + this.score);
+    //     ...
+    //	   ...
+    //  };
     function collectStar(player: any, star: any) {
       star.disableBody(true, true);
       this.score += 10;
@@ -127,6 +140,7 @@ export default class GameScene extends Phaser.Scene {
       this.gameOver = true;
 
       // PLAY GAMEOVERSCENE ISSUE 13
+      // add more scenes?
     }
   }
 
