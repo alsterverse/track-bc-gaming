@@ -1,7 +1,6 @@
 repo for track big crew gaming
 
-you can start the tutorial on this page:
-http://phaser.io/tutorials/making-your-first-phaser-3-game/part2
+see issues for what to do next https://github.com/alsterverse/track-bc-gaming/issues
 
 npm i
 npm run dev
