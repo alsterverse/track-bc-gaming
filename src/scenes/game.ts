@@ -1,5 +1,6 @@
 import { Game } from "phaser";
 import GameOverScene from "./gameover";
+import { io } from "socket.io-client";
 
 export default class GameScene extends Phaser.Scene {
   constructor() {
@@ -15,6 +16,9 @@ export default class GameScene extends Phaser.Scene {
   scoreText: any = "";
   bombs: any;
   gameOver: Boolean = false;
+  socket = io("http://localhost:9001");
+  others: any[] = [];
+  otherSprites: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody[] = [];
 
   preload() {
     // load music and sounds ISSUE 11
@@ -25,6 +29,10 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("star", "assets/star.png");
     this.load.image("bomb", "assets/bomb.png");
     this.load.spritesheet("dude", "assets/dude.png", {
+      frameWidth: 32,
+      frameHeight: 48,
+    });
+    this.load.spritesheet("evildude", "assets/evildude.png", {
       frameWidth: 32,
       frameHeight: 48,
     });
@@ -46,6 +54,11 @@ export default class GameScene extends Phaser.Scene {
 
     // add socket.io / partykit for multiplayer, I guess you have to say that this.player should be pushed to some kind of service/server/thing
     // ISSUE 7
+    //this.socket.emit("msg", "test");
+
+    this.socket.on("connection", () => {
+      console.log("connected");
+    });
 
     // player dude
     this.player = this.physics.add.sprite(375, 100, "dude");
@@ -158,5 +171,32 @@ export default class GameScene extends Phaser.Scene {
     if (this.cursors.up.isDown && this.player.body.touching.down) {
       this.player.setVelocityY(-330);
     }
+
+    this.socket.emit("updatePlayers", {
+      x: this.player.x,
+      y: this.player.y,
+    });
+
+    this.socket.on("updatePlayers", (data: any) => {
+      if (this.otherSprites && this.otherSprites.length) {
+        this.otherSprites.forEach((sprite) => {
+          sprite.destroy(true);
+          this.otherSprites = [];
+        });
+      }
+      this.others = data;
+    });
+
+    if (this.others)
+      for (let i = 0; i < this.others.length; i++) {
+        if (this.others[i].id !== this.socket.id) {
+          const newPlayer = this.physics.add.sprite(
+            this.others[i].x,
+            this.others[i].y,
+            "evildude"
+          );
+          this.otherSprites.push(newPlayer);
+        }
+      }
   }
 }
