@@ -1,36 +1,36 @@
 {
-    "name": "phaser-3-typescript-webpack-bc-gaming",
-    "version": "1.0.0",
-    "description": "",
-    "main": "main.ts",
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
-        "build": "webpack --config webpack.prod.js",
-        "dev": "webpack serve --config webpack.common.js",
-        "dev-fb": "webpack serve --config webpack.fb.js",
-        "partykit-dev": "partykit dev",
-        "partykit-deploy": "partykit deploy"
-    },
-    "author": "",
-    "license": "ISC",
-    "dependencies": {
-        "partysocket": "^0.0.14",
-        "phaser": "^3.60.0"
-    },
-    "devDependencies": {
-        "@babel/core": "^7.21.8",
-        "babel-loader": "^9.1.2",
-        "babel-preset-env": "^1.7.0",
-        "clean-webpack-plugin": "^4.0.0",
-        "copy-webpack-plugin": "^11.0.0",
-        "html-webpack-plugin": "^5.5.1",
-        "partykit": "0.0.32",
-        "terser-webpack-plugin": "^5.3.7",
-        "ts-loader": "^9.4.2",
-        "typescript": "^5.0.4",
-        "webpack": "^5.82.0",
-        "webpack-cli": "^5.0.2",
-        "webpack-dev-server": "^4.13.3",
-        "webpack-merge": "^5.8.0"
-    }
+  "name": "phaser-3-typescript-webpack-bc-gaming",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack --config webpack.prod.js",
+    "dev": "webpack serve --config webpack.common.js",
+    "dev-fb": "webpack serve --config webpack.fb.js",
+    "partykit-dev": "partykit dev",
+    "partykit-deploy": "partykit deploy"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "partysocket": "^0.0.14",
+    "phaser": "^3.60.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.21.8",
+    "babel-loader": "^9.1.2",
+    "babel-preset-env": "^1.7.0",
+    "clean-webpack-plugin": "^4.0.0",
+    "copy-webpack-plugin": "^11.0.0",
+    "html-webpack-plugin": "^5.5.1",
+    "partykit": "0.0.32",
+    "terser-webpack-plugin": "^5.3.7",
+    "ts-loader": "^9.4.2",
+    "typescript": "^5.0.4",
+    "webpack": "^5.82.0",
+    "webpack-cli": "^5.0.2",
+    "webpack-dev-server": "^4.13.3",
+    "webpack-merge": "^5.8.0"
+  }
 }
