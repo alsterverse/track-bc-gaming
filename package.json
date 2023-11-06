@@ -7,7 +7,9 @@
         "test": "echo \"Error: no test specified\" && exit 1",
         "build": "webpack --config webpack.prod.js",
         "dev": "webpack serve --config webpack.common.js",
-        "dev-fb": "webpack serve --config webpack.fb.js"
+        "dev-fb": "webpack serve --config webpack.fb.js",
+        "partykit-dev": "partykit dev",
+        "partykit-deploy": "partykit deploy"
     },
     "author": "",
     "license": "ISC",
@@ -22,6 +24,7 @@
         "clean-webpack-plugin": "^4.0.0",
         "copy-webpack-plugin": "^11.0.0",
         "html-webpack-plugin": "^5.5.1",
+        "partykit": "0.0.32",
         "terser-webpack-plugin": "^5.3.7",
         "ts-loader": "^9.4.2",
         "typescript": "^5.0.4",
