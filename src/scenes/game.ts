@@ -31,6 +31,7 @@ export default class GameScene extends Phaser.Scene {
   gifts: any;
   score: any = 0;
   scoreText: any = "";
+  scoreBoard: any = "";
   bombs: any;
   gameOver: Boolean = false;
   left: any;
@@ -42,6 +43,17 @@ export default class GameScene extends Phaser.Scene {
   otherPlayers: Player[] = [];
   otherSprites: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody[] = [];
   dead: Boolean = false;
+
+  updateScoreBoard() {
+    let ids = [] as string[];
+    ids.push(`players`);
+    this.otherPlayers.forEach((player) => {
+      player.id !== partySocket.id
+        ? ids.push(`other player: ${player.id}`)
+        : ids.push(`you: ${player.id}`);
+    });
+    this.scoreBoard.setText(ids);
+  }
 
   preload() {
     // load music and sounds ISSUE 11
@@ -165,6 +177,7 @@ export default class GameScene extends Phaser.Scene {
     });
 
     this.scoreText = this.add.text(16, 16, "score: 0");
+    this.scoreBoard = this.add.text(16, 32, "players");
 
     // player and platform collider check
     this.physics.add.collider(this.player, this.platforms);
@@ -253,7 +266,7 @@ export default class GameScene extends Phaser.Scene {
     ) {
       this.player.setVelocityY(-330);
     }
-
+    this.updateScoreBoard();
     this.frame++;
     if (this.frame % 2 === 0) {
       partySocket.send(
