@@ -2,161 +2,224 @@ import { Game } from "phaser";
 import GameOverScene from "./gameover";
 
 export default class GameScene extends Phaser.Scene {
-	constructor() {
-		super("game");
-	}
+  constructor() {
+    super("game");
+  }
 
-	// add types to variables ISSUE 14
-	platforms: any;
-	player: any;
-	cursors: any;
-	gifts: any;
-	score: any = 0;
-	scoreText: any = "";
-	bombs: any;
-	gameOver: Boolean = false;
+  // add types to variables ISSUE 14
+  platforms: any;
+  player: any;
+  cursors: any;
+  gifts: any;
+  score: any = 0;
+  scoreText: any = "";
+  bombs: any;
+  gameOver: Boolean = false;
+  left: any;
+  up: any;
+  right: any;
+  moveLeft: Boolean = false;
+  moveRight: Boolean = false;
+  moveUp: Boolean = false;
 
-	preload() {
-		// load music and sounds ISSUE 11
-		// this.load.audio("music", "assets/music.mp3");
+  preload() {
+    // load music and sounds ISSUE 11
+    // this.load.audio("music", "assets/music.mp3");
 
-		this.load.image("sky", "assets/sky.png");
-		this.load.image("ground", "assets/platform.png");
-		this.load.image("gift", "assets/christmas-gift.png");
-		this.load.image("bomb", "assets/bomb.png");
-		this.load.spritesheet("dude", "assets/dude.png", {
-			frameWidth: 32,
-			frameHeight: 48,
-		});
-	}
+    this.load.image("sky", "assets/sky.png");
+    this.load.image("ground", "assets/platform.png");
+    this.load.image("gift", "assets/christmas-gift.png");
+    this.load.image("bomb", "assets/bomb.png");
+    this.load.image("left", "assets/left.png");
+    this.load.image("right", "assets/right.png");
+    this.load.image("up", "assets/up.png");
 
-	create() {
-		// add shake camera effect when something cool happens ISSUE 10
-		// see here https://labs.phaser.io/edit.html?src=src/camera/shake.js&v=3.60.0
+    this.load.spritesheet("dude", "assets/dude.png", {
+      frameWidth: 32,
+      frameHeight: 48,
+    });
+  }
 
-		// game scene and platsforms
-		this.add.image(400, 300, "sky");
+  create() {
+    // add shake camera effect when something cool happens ISSUE 10
+    // see here https://labs.phaser.io/edit.html?src=src/camera/shake.js&v=3.60.0
 
-		//add new graphics ISSUE 9
-		this.platforms = this.physics.add.staticGroup();
-		this.platforms.create(400, 568, "ground").setScale(2).refreshBody();
-		this.platforms.create(600, 400, "ground");
-		this.platforms.create(50, 250, "ground");
-		this.platforms.create(750, 220, "ground");
+    // game scene and platsforms
+    this.add.image(400, 300, "sky").scale = 2;
 
-		// add socket.io / partykit for multiplayer, I guess you have to say that this.player should be pushed to some kind of service/server/thing
-		// ISSUE 7
+    this.left = this.add.image(250, 650, "left");
+    this.right = this.add.image(350, 650, "right");
+    this.up = this.add.image(500, 650, "up");
 
-		// player dude
-		this.player = this.physics.add.sprite(375, 100, "dude");
-		this.player.setBounce(0.3);
-		this.player.setCollideWorldBounds(true);
+    this.left.scale;
+    this.up.scale;
+    this.right.scale;
 
-		// refactor player movement, add mobile device movement.  ISSUE 2
-		this.anims.create({
-			key: "left",
-			frames: this.anims.generateFrameNumbers("dude", { start: 0, end: 3 }),
-			frameRate: 10,
-			repeat: -1,
-		});
+    const lefthitArea = new Phaser.Geom.Rectangle(
+      this.left.frame.x,
+      this.left.frame.y,
+      this.left.frame.width,
+      this.left.frame.height
+    );
+    const righthitArea = new Phaser.Geom.Rectangle(
+      this.up.frame.x,
+      this.up.frame.y,
+      this.up.frame.width,
+      this.up.frame.height
+    );
+    const uphitArea = new Phaser.Geom.Rectangle(
+      this.up.frame.x,
+      this.up.frame.y,
+      this.up.frame.width,
+      this.up.frame.height
+    );
 
-		this.anims.create({
-			key: "turn",
-			frames: [{ key: "dude", frame: 4 }],
-			frameRate: 20,
-		});
+    this.left.setInteractive(lefthitArea, Phaser.Geom.Rectangle.Contains);
+    this.right.setInteractive(righthitArea, Phaser.Geom.Rectangle.Contains);
+    this.up.setInteractive(uphitArea, Phaser.Geom.Rectangle.Contains);
 
-		this.anims.create({
-			key: "right",
-			frames: this.anims.generateFrameNumbers("dude", { start: 5, end: 8 }),
-			frameRate: 10,
-			repeat: -1,
-		});
+    this.left.on("pointerdown", () => {
+      this.moveLeft = true;
+    });
+    this.left.on("pointerup", () => {
+      this.moveLeft = false;
+    });
+    this.right.on("pointerdown", () => {
+      this.moveRight = true;
+    });
+    this.right.on("pointerup", () => {
+      this.moveRight = false;
+    });
+    this.up.on("pointerdown", () => {
+      this.moveUp = true;
+    });
+    this.up.on("pointerup", () => {
+      this.moveUp = false;
+    });
 
-		this.scoreText = this.add.text(16, 16, "score: 0");
+    //add new graphics ISSUE 9
+    this.platforms = this.physics.add.staticGroup();
+    this.platforms.create(400, 568, "ground").setScale(2).refreshBody();
+    this.platforms.create(600, 400, "ground");
+    this.platforms.create(50, 250, "ground");
+    this.platforms.create(750, 220, "ground");
 
-		// player and platform collider check
-		this.physics.add.collider(this.player, this.platforms);
+    // add socket.io / partykit for multiplayer, I guess you have to say that this.player should be pushed to some kind of service/server/thing
+    // ISSUE 7
 
-		// implementing player moves functionality
-		this.cursors = this.input.keyboard.createCursorKeys();
+    // player dude
+    this.player = this.physics.add.sprite(375, 100, "dude");
+    this.player.setBounce(0.3);
+    this.player.setCollideWorldBounds(true);
 
-		this.gifts = this.physics.add.group({
-			key: "gift",
-			repeat: 11,
-			setXY: { x: 12, y: 0, stepX: 70 },
-		});
+    // refactor player movement, add mobile device movement.  ISSUE 2
+    this.anims.create({
+      key: "left",
+      frames: this.anims.generateFrameNumbers("dude", { start: 0, end: 3 }),
+      frameRate: 10,
+      repeat: -1,
+    });
 
-		this.gifts.children.iterate(function (child: any) {
-			child.setBounceY(Phaser.Math.FloatBetween(0.2, 0.5));
-		});
+    this.anims.create({
+      key: "turn",
+      frames: [{ key: "dude", frame: 4 }],
+      frameRate: 20,
+    });
 
-		// gift and platform collider check
-		this.physics.add.collider(this.gifts, this.platforms);
+    this.anims.create({
+      key: "right",
+      frames: this.anims.generateFrameNumbers("dude", { start: 5, end: 8 }),
+      frameRate: 10,
+      repeat: -1,
+    });
 
-		// check if player hits gift - if yes trigger collectGift
-		this.physics.add.overlap(this.player, this.gifts, collectGift, null, this);
+    this.scoreText = this.add.text(16, 16, "score: 0");
 
-		// example arrow function, from Robin's branch
+    // player and platform collider check
+    this.physics.add.collider(this.player, this.platforms);
 
-		//  const collectGift = (player: any, gift: any) => {
-		// 	  gift.disableBody(true, true);
-		// 	  this.score += 100;
-		// 	  this.scoreText.setText("Score: " + this.score);
-		//     ...
-		//	   ...
-		//  };
-		function collectGift(player: any, gift: any) {
-			gift.disableBody(true, true);
-			this.score += 10;
-			this.scoreText.setText("Score: " + this.score);
-			console.log(this.gifts.countActive(true));
+    // implementing player moves functionality
+    this.cursors = this.input.keyboard.createCursorKeys();
 
-			var x =
-				player.x < 400
-					? Phaser.Math.Between(400, 800)
-					: Phaser.Math.Between(0, 400);
+    this.gifts = this.physics.add.group({
+      key: "gift",
+      repeat: 11,
+      setXY: { x: 12, y: 0, stepX: 70 },
+    });
 
-			var bomb = this.bombs.create(x, 16, "bomb");
-			bomb.setBounce(1);
-			bomb.setCollideWorldBounds(true);
-			bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
-			if (this.gifts.countActive(true) === 0) {
-				this.gifts.children.iterate(function (child: any) {
-					child.enableBody(true, child.x, 0, true, true);
-				});
-			}
-		}
+    this.gifts.children.iterate(function (child: any) {
+      child.setBounceY(Phaser.Math.FloatBetween(0.2, 0.5));
+    });
 
-		// Create bombs and trigger hitBomb if player collides with gift
-		this.bombs = this.physics.add.group();
-		this.physics.add.collider(this.bombs, this.platforms);
-		this.physics.add.collider(this.player, this.bombs, hitBomb, null, this);
+    // gift and platform collider check
+    this.physics.add.collider(this.gifts, this.platforms);
 
-		function hitBomb(player: any, bomb: any) {
-			this.physics.pause();
-			player.setTint(0xff0000);
-			player.anims.play("turn");
-			this.gameOver = true;
+    // check if player hits gift - if yes trigger collectGift
+    this.physics.add.overlap(this.player, this.gifts, collectGift, null, this);
 
-			// PLAY GAMEOVERSCENE ISSUE 13
-			// add more scenes?
-		}
-	}
+    // example arrow function, from Robin's branch
 
-	update() {
-		if (this.cursors.left.isDown) {
-			this.player.setVelocityX(-160);
-			this.player.anims.play("left", true);
-		} else if (this.cursors.right.isDown) {
-			this.player.setVelocityX(160);
-			this.player.anims.play("right", true);
-		} else {
-			this.player.setVelocityX(0);
-			this.player.anims.play("turn");
-		}
-		if (this.cursors.up.isDown && this.player.body.touching.down) {
-			this.player.setVelocityY(-330);
-		}
-	}
+    //  const collectGift = (player: any, gift: any) => {
+    // 	  gift.disableBody(true, true);
+    // 	  this.score += 100;
+    // 	  this.scoreText.setText("Score: " + this.score);
+    //     ...
+    //	   ...
+    //  };
+    function collectGift(player: any, gift: any) {
+      gift.disableBody(true, true);
+      this.score += 10;
+      this.scoreText.setText("Score: " + this.score);
+
+      var x =
+        player.x < 400
+          ? Phaser.Math.Between(400, 800)
+          : Phaser.Math.Between(0, 400);
+
+      var bomb = this.bombs.create(x, 16, "bomb");
+      bomb.setBounce(1);
+      bomb.setCollideWorldBounds(true);
+      bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
+      if (this.gifts.countActive(true) === 0) {
+        this.gifts.children.iterate(function (child: any) {
+          child.enableBody(true, child.x, 0, true, true);
+        });
+      }
+    }
+
+    // Create bombs and trigger hitBomb if player collides with gift
+    this.bombs = this.physics.add.group();
+    this.physics.add.collider(this.bombs, this.platforms);
+    this.physics.add.collider(this.player, this.bombs, hitBomb, null, this);
+
+    function hitBomb(player: any, bomb: any) {
+      this.physics.pause();
+      player.setTint(0xff0000);
+      player.anims.play("turn");
+      this.gameOver = true;
+
+      // PLAY GAMEOVERSCENE ISSUE 13
+      // add more scenes?
+    }
+  }
+
+  update() {
+    this;
+    if (this.cursors.left.isDown || this.moveLeft) {
+      this.player.setVelocityX(-160);
+      this.player.anims.play("left", true);
+    } else if (this.cursors.right.isDown || this.moveRight) {
+      this.player.setVelocityX(160);
+      this.player.anims.play("right", true);
+    } else {
+      this.player.setVelocityX(0);
+      this.player.anims.play("turn");
+    }
+    if (
+      (this.cursors.up.isDown || this.moveUp) &&
+      this.player.body.touching.down
+    ) {
+      this.player.setVelocityY(-330);
+    }
+  }
 }
