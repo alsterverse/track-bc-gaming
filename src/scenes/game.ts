@@ -1,5 +1,21 @@
 import { Game } from "phaser";
 import GameOverScene from "./gameover";
+import PartySocket from "partysocket";
+
+// dev host: http://127.0.0.1:1999
+// prod host: https://mother-town.alsterjim.partykit.dev
+
+const partySocket = new PartySocket({
+  host: "https://mother-town.alsterjim.partykit.dev",
+  room: "my-room",
+});
+
+type Player = {
+  x: number;
+  y: number;
+  id: string;
+  direction: string;
+};
 
 export default class GameScene extends Phaser.Scene {
   constructor() {
@@ -7,6 +23,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   // add types to variables ISSUE 14
+  frame: number = 0;
   platforms: any;
   player: any;
   cursors: any;
@@ -21,6 +38,8 @@ export default class GameScene extends Phaser.Scene {
   moveLeft: Boolean = false;
   moveRight: Boolean = false;
   moveUp: Boolean = false;
+  otherPlayers: Player[] = [];
+  otherSprites: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody[] = [];
 
   preload() {
     // load music and sounds ISSUE 11
@@ -43,6 +62,9 @@ export default class GameScene extends Phaser.Scene {
   create() {
     // add shake camera effect when something cool happens ISSUE 10
     // see here https://labs.phaser.io/edit.html?src=src/camera/shake.js&v=3.60.0
+    partySocket.addEventListener("message", (e) => {
+      this.otherPlayers = JSON.parse(e.data) as Player[];
+    });
 
     // game scene and platsforms
     this.add.image(400, 300, "sky").scale = 2;
@@ -221,5 +243,39 @@ export default class GameScene extends Phaser.Scene {
     ) {
       this.player.setVelocityY(-330);
     }
+
+    this.frame++;
+    if (this.frame % 2 === 0) {
+      partySocket.send(
+        JSON.stringify({
+          x: this.player.x,
+          y: this.player.y,
+          direction: this.player.anims.currentAnim.key,
+        })
+      );
+
+      if (this.otherSprites && this.otherSprites.length) {
+        this.otherSprites.forEach((sprite) => {
+          sprite.destroy(true);
+        });
+        this.otherSprites = [];
+      }
+
+      if (this.otherPlayers) {
+        for (let i = 0; i < this.otherPlayers.length; i++) {
+          if (this.otherPlayers[i].id !== partySocket.id) {
+            const newSprite = this.physics.add.sprite(
+              this.otherPlayers[i].x,
+              this.otherPlayers[i].y,
+              "dude"
+            );
+            newSprite.anims.play(this.otherPlayers[i].direction, true);
+            this.otherSprites.push(newSprite);
+            this.physics.add.collider(this.player, newSprite);
+          }
+        }
+      }
+    }
+    if (this.frame === 60) this.frame = 0;
   }
 }
