@@ -32,6 +32,12 @@ export default class GameScene extends Phaser.Scene {
   scoreText: any = "";
   bombs: any;
   gameOver: Boolean = false;
+  left: any;
+  up: any;
+  right: any;
+  moveLeft: Boolean = false;
+  moveRight: Boolean = false;
+  moveUp: Boolean = false;
   otherPlayers: Player[] = [];
   otherSprites: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody[] = [];
 
@@ -43,6 +49,10 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("ground", "assets/platform.png");
     this.load.image("gift", "assets/christmas-gift.png");
     this.load.image("bomb", "assets/bomb.png");
+    this.load.image("left", "assets/left.png");
+    this.load.image("right", "assets/right.png");
+    this.load.image("up", "assets/up.png");
+
     this.load.spritesheet("dude", "assets/dude.png", {
       frameWidth: 32,
       frameHeight: 48,
@@ -57,7 +67,57 @@ export default class GameScene extends Phaser.Scene {
     });
 
     // game scene and platsforms
-    this.add.image(400, 300, "sky");
+    this.add.image(400, 300, "sky").scale = 2;
+
+    this.left = this.add.image(250, 650, "left");
+    this.right = this.add.image(350, 650, "right");
+    this.up = this.add.image(500, 650, "up");
+
+    this.left.scale;
+    this.up.scale;
+    this.right.scale;
+
+    const lefthitArea = new Phaser.Geom.Rectangle(
+      this.left.frame.x,
+      this.left.frame.y,
+      this.left.frame.width,
+      this.left.frame.height
+    );
+    const righthitArea = new Phaser.Geom.Rectangle(
+      this.up.frame.x,
+      this.up.frame.y,
+      this.up.frame.width,
+      this.up.frame.height
+    );
+    const uphitArea = new Phaser.Geom.Rectangle(
+      this.up.frame.x,
+      this.up.frame.y,
+      this.up.frame.width,
+      this.up.frame.height
+    );
+
+    this.left.setInteractive(lefthitArea, Phaser.Geom.Rectangle.Contains);
+    this.right.setInteractive(righthitArea, Phaser.Geom.Rectangle.Contains);
+    this.up.setInteractive(uphitArea, Phaser.Geom.Rectangle.Contains);
+
+    this.left.on("pointerdown", () => {
+      this.moveLeft = true;
+    });
+    this.left.on("pointerup", () => {
+      this.moveLeft = false;
+    });
+    this.right.on("pointerdown", () => {
+      this.moveRight = true;
+    });
+    this.right.on("pointerup", () => {
+      this.moveRight = false;
+    });
+    this.up.on("pointerdown", () => {
+      this.moveUp = true;
+    });
+    this.up.on("pointerup", () => {
+      this.moveUp = false;
+    });
 
     //add new graphics ISSUE 9
     this.platforms = this.physics.add.staticGroup();
@@ -132,7 +192,6 @@ export default class GameScene extends Phaser.Scene {
       gift.disableBody(true, true);
       this.score += 10;
       this.scoreText.setText("Score: " + this.score);
-      console.log(this.gifts.countActive(true));
 
       var x =
         player.x < 400
@@ -167,17 +226,21 @@ export default class GameScene extends Phaser.Scene {
   }
 
   update() {
-    if (this.cursors.left.isDown) {
+    this;
+    if (this.cursors.left.isDown || this.moveLeft) {
       this.player.setVelocityX(-160);
       this.player.anims.play("left", true);
-    } else if (this.cursors.right.isDown) {
+    } else if (this.cursors.right.isDown || this.moveRight) {
       this.player.setVelocityX(160);
       this.player.anims.play("right", true);
     } else {
       this.player.setVelocityX(0);
       this.player.anims.play("turn");
     }
-    if (this.cursors.up.isDown && this.player.body.touching.down) {
+    if (
+      (this.cursors.up.isDown || this.moveUp) &&
+      this.player.body.touching.down
+    ) {
       this.player.setVelocityY(-330);
     }
 
