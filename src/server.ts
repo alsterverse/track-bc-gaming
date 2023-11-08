@@ -5,6 +5,7 @@ type Player = {
   y: number;
   id: string;
   direction: string;
+  dead?: boolean;
 };
 let players: Player[] = [];
 
@@ -37,6 +38,7 @@ export default class Server implements Party.Server {
         player.x = playa.x;
         player.y = playa.y;
         player.direction = playa.direction;
+        player.dead = playa.dead;
       }
     });
 

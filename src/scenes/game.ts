@@ -15,6 +15,7 @@ type Player = {
   y: number;
   id: string;
   direction: string;
+  dead?: boolean;
 };
 
 export default class GameScene extends Phaser.Scene {
@@ -40,6 +41,7 @@ export default class GameScene extends Phaser.Scene {
   moveUp: Boolean = false;
   otherPlayers: Player[] = [];
   otherSprites: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody[] = [];
+  dead: Boolean = false;
 
   preload() {
     // load music and sounds ISSUE 11
@@ -54,6 +56,10 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("up", "assets/up.png");
 
     this.load.spritesheet("dude", "assets/dude.png", {
+      frameWidth: 32,
+      frameHeight: 48,
+    });
+    this.load.spritesheet("deadDude", "assets/dead_dude.png", {
       frameWidth: 32,
       frameHeight: 48,
     });
@@ -133,6 +139,9 @@ export default class GameScene extends Phaser.Scene {
     this.player = this.physics.add.sprite(375, 100, "dude");
     this.player.setBounce(0.3);
     this.player.setCollideWorldBounds(true);
+
+    // this.cameras.main.setSize(200, 300);
+    // this.cameras.main.startFollow(this.player);
 
     // refactor player movement, add mobile device movement.  ISSUE 2
     this.anims.create({
@@ -219,6 +228,7 @@ export default class GameScene extends Phaser.Scene {
       player.setTint(0xff0000);
       player.anims.play("turn");
       this.gameOver = true;
+      this.dead = true;
 
       // PLAY GAMEOVERSCENE ISSUE 13
       // add more scenes?
@@ -251,6 +261,7 @@ export default class GameScene extends Phaser.Scene {
           x: this.player.x,
           y: this.player.y,
           direction: this.player.anims.currentAnim.key,
+          dead: this.dead,
         })
       );
 
@@ -267,9 +278,9 @@ export default class GameScene extends Phaser.Scene {
             const newSprite = this.physics.add.sprite(
               this.otherPlayers[i].x,
               this.otherPlayers[i].y,
-              "dude"
+              this.otherPlayers[i].dead ? "deadDude" : "dude"
             );
-            newSprite.anims.play(this.otherPlayers[i].direction, true);
+            //newSprite.anims.play(this.otherPlayers[i].direction, true);
             this.otherSprites.push(newSprite);
             this.physics.add.collider(this.player, newSprite);
           }
