@@ -34,8 +34,15 @@ export default class GameScene extends Phaser.Scene {
   scoreText: any = "";
   bombs: any;
   gameOver: Boolean = false;
+  left: any;
+  up: any;
+  right: any;
+  moveLeft: Boolean = false;
+  moveRight: Boolean = false;
+  moveUp: Boolean = false;
   otherPlayers: Player[] = [];
   otherSprites: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody[] = [];
+  dead: Boolean = false;
 
   preload() {
     // load music and sounds ISSUE 11
@@ -49,7 +56,15 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("platform_small", "assets/ice_platform_small.png");
     this.load.image("gift", "assets/christmas-gift.png");
     this.load.image("bomb", "assets/bomb.png");
+    this.load.image("left", "assets/left.png");
+    this.load.image("right", "assets/right.png");
+    this.load.image("up", "assets/up.png");
+
     this.load.spritesheet("dude", "assets/dude.png", {
+      frameWidth: 32,
+      frameHeight: 48,
+    });
+    this.load.spritesheet("deadDude", "assets/dead_dude.png", {
       frameWidth: 32,
       frameHeight: 48,
     });
@@ -77,12 +92,62 @@ export default class GameScene extends Phaser.Scene {
 
     this.background.anims.play("snow", true);
 
+    this.left = this.add.image(250, 650, "left");
+    this.right = this.add.image(350, 650, "right");
+    this.up = this.add.image(500, 650, "up");
+
+    this.left.scale;
+    this.up.scale;
+    this.right.scale;
+
+    const lefthitArea = new Phaser.Geom.Rectangle(
+      this.left.frame.x,
+      this.left.frame.y,
+      this.left.frame.width,
+      this.left.frame.height
+    );
+    const righthitArea = new Phaser.Geom.Rectangle(
+      this.up.frame.x,
+      this.up.frame.y,
+      this.up.frame.width,
+      this.up.frame.height
+    );
+    const uphitArea = new Phaser.Geom.Rectangle(
+      this.up.frame.x,
+      this.up.frame.y,
+      this.up.frame.width,
+      this.up.frame.height
+    );
+
+    this.left.setInteractive(lefthitArea, Phaser.Geom.Rectangle.Contains);
+    this.right.setInteractive(righthitArea, Phaser.Geom.Rectangle.Contains);
+    this.up.setInteractive(uphitArea, Phaser.Geom.Rectangle.Contains);
+
+    this.left.on("pointerdown", () => {
+      this.moveLeft = true;
+    });
+    this.left.on("pointerup", () => {
+      this.moveLeft = false;
+    });
+    this.right.on("pointerdown", () => {
+      this.moveRight = true;
+    });
+    this.right.on("pointerup", () => {
+      this.moveRight = false;
+    });
+    this.up.on("pointerdown", () => {
+      this.moveUp = true;
+    });
+    this.up.on("pointerup", () => {
+      this.moveUp = false;
+    });
+
     //add new graphics ISSUE 9
 
     this.platforms = this.physics.add.staticGroup();
-    this.platforms.create(630, 680, "platform").setScale(5).refreshBody();
+    this.platforms.create(630, 750, "platform").setScale(7).refreshBody();
     this.platforms.create(1000, 500, "platform");
-    this.platforms.create(600, 400, "platform_small");
+    this.platforms.create(500, 480, "platform_small");
     this.platforms.create(1200, 200, "platform_small");
     this.platforms.create(100, 250, "platform");
     this.platforms.create(100, 530, "platform_small");
@@ -97,6 +162,9 @@ export default class GameScene extends Phaser.Scene {
     this.player = this.physics.add.sprite(375, 100, "dude");
     this.player.setBounce(0.3);
     this.player.setCollideWorldBounds(true);
+
+    // this.cameras.main.setSize(200, 300);
+    // this.cameras.main.startFollow(this.player);
 
     // refactor player movement, add mobile device movement.  ISSUE 2
     this.anims.create({
@@ -156,7 +224,6 @@ export default class GameScene extends Phaser.Scene {
       gift.disableBody(true, true);
       this.score += 10;
       this.scoreText.setText("Score: " + this.score);
-      console.log(this.gifts.countActive(true));
 
       var x =
         player.x < 400
@@ -184,6 +251,7 @@ export default class GameScene extends Phaser.Scene {
       player.setTint(0xff0000);
       player.anims.play("turn");
       this.gameOver = true;
+      this.dead = true;
 
       // PLAY GAMEOVERSCENE ISSUE 13
       // add more scenes?
@@ -191,17 +259,21 @@ export default class GameScene extends Phaser.Scene {
   }
 
   update() {
-    if (this.cursors.left.isDown) {
+    this;
+    if (this.cursors.left.isDown || this.moveLeft) {
       this.player.setVelocityX(-160);
       this.player.anims.play("left", true);
-    } else if (this.cursors.right.isDown) {
+    } else if (this.cursors.right.isDown || this.moveRight) {
       this.player.setVelocityX(160);
       this.player.anims.play("right", true);
     } else {
       this.player.setVelocityX(0);
       this.player.anims.play("turn");
     }
-    if (this.cursors.up.isDown && this.player.body.touching.down) {
+    if (
+      (this.cursors.up.isDown || this.moveUp) &&
+      this.player.body.touching.down
+    ) {
       this.player.setVelocityY(-330);
     }
 
@@ -212,7 +284,7 @@ export default class GameScene extends Phaser.Scene {
           x: this.player.x,
           y: this.player.y,
           direction: this.player.anims.currentAnim.key,
-          dead: this.gameOver,
+          dead: this.dead,
         })
       );
 
@@ -229,9 +301,9 @@ export default class GameScene extends Phaser.Scene {
             const newSprite = this.physics.add.sprite(
               this.otherPlayers[i].x,
               this.otherPlayers[i].y,
-              this.otherPlayers[i].dead ? "bomb" : "dude"
+              this.otherPlayers[i].dead ? "deadDude" : "dude"
             );
-            newSprite.anims.play(this.otherPlayers[i].direction, true);
+            //newSprite.anims.play(this.otherPlayers[i].direction, true);
             this.otherSprites.push(newSprite);
             this.physics.add.collider(this.player, newSprite);
           }

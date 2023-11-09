@@ -38,6 +38,7 @@ export default class Server implements Party.Server {
         player.x = playa.x;
         player.y = playa.y;
         player.direction = playa.direction;
+        player.dead = playa.dead;
       }
     });
 
