@@ -15,6 +15,7 @@ type Player = {
   y: number;
   id: string;
   direction: string;
+  dead?: boolean;
 };
 
 export default class GameScene extends Phaser.Scene {
@@ -23,6 +24,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   // add types to variables ISSUE 14
+  background: any;
   frame: number = 0;
   platforms: any;
   player: any;
@@ -39,8 +41,12 @@ export default class GameScene extends Phaser.Scene {
     // load music and sounds ISSUE 11
     // this.load.audio("music", "assets/music.mp3");
 
-    this.load.image("sky", "assets/sky.png");
-    this.load.image("ground", "assets/platform.png");
+    this.load.spritesheet("snowyBackground", "assets/snow.png", {
+      frameWidth: 500,
+      frameHeight: 375,
+    });
+    this.load.image("platform", "assets/ice_platform.png");
+    this.load.image("platform_small", "assets/ice_platform_small.png");
     this.load.image("gift", "assets/christmas-gift.png");
     this.load.image("bomb", "assets/bomb.png");
     this.load.spritesheet("dude", "assets/dude.png", {
@@ -57,14 +63,32 @@ export default class GameScene extends Phaser.Scene {
     });
 
     // game scene and platsforms
-    this.add.image(400, 300, "sky");
+    this.background = this.add.sprite(700, 800, "snowyBackground").setScale(5);
+
+    this.anims.create({
+      key: "snow",
+      frames: this.anims.generateFrameNumbers("snowyBackground", {
+        start: 0,
+        end: 2,
+      }),
+      frameRate: 4,
+      repeat: 10000,
+    });
+
+    this.background.anims.play("snow", true);
 
     //add new graphics ISSUE 9
+
     this.platforms = this.physics.add.staticGroup();
-    this.platforms.create(400, 568, "ground").setScale(2).refreshBody();
-    this.platforms.create(600, 400, "ground");
-    this.platforms.create(50, 250, "ground");
-    this.platforms.create(750, 220, "ground");
+    this.platforms.create(630, 680, "platform").setScale(5).refreshBody();
+    this.platforms.create(1000, 500, "platform");
+    this.platforms.create(600, 400, "platform_small");
+    this.platforms.create(1200, 200, "platform_small");
+    this.platforms.create(100, 250, "platform");
+    this.platforms.create(100, 530, "platform_small");
+    this.platforms.create(750, 250, "platform_small");
+    this.platforms.create(500, 150, "platform_small");
+    this.platforms.create(1100, 350, "platform").setScale(1.5);
 
     // add socket.io / partykit for multiplayer, I guess you have to say that this.player should be pushed to some kind of service/server/thing
     // ISSUE 7
@@ -188,6 +212,7 @@ export default class GameScene extends Phaser.Scene {
           x: this.player.x,
           y: this.player.y,
           direction: this.player.anims.currentAnim.key,
+          dead: this.gameOver,
         })
       );
 
@@ -204,7 +229,7 @@ export default class GameScene extends Phaser.Scene {
             const newSprite = this.physics.add.sprite(
               this.otherPlayers[i].x,
               this.otherPlayers[i].y,
-              "dude"
+              this.otherPlayers[i].dead ? "bomb" : "dude"
             );
             newSprite.anims.play(this.otherPlayers[i].direction, true);
             this.otherSprites.push(newSprite);

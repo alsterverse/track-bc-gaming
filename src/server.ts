@@ -5,6 +5,7 @@ type Player = {
   y: number;
   id: string;
   direction: string;
+  dead?: boolean;
 };
 let players: Player[] = [];
 
