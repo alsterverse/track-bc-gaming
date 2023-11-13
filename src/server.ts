@@ -46,7 +46,6 @@ export default class Server implements Party.Server {
   onMessage(message: string, sender: Party.Connection) {
     const msg = JSON.parse(message) as Message;
     if (msg.type === "players") {
-      console.log(msg.object);
       players.forEach((player) => {
         if (player.id === sender.id) {
           player.x = msg.object.x;
