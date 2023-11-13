@@ -6,16 +6,35 @@ import PartySocket from "partysocket";
 // prod host: https://mother-town.alsterjim.partykit.dev
 
 const partySocket = new PartySocket({
-  host: "https://mother-town.alsterjim.partykit.dev",
+  host: "http://127.0.0.1:1999",
   room: "my-room",
 });
+
+type GameObject = {
+  x: number;
+  y: number;
+  id: string;
+  direction?: string;
+  dead?: boolean;
+};
+
+type Message = {
+  type: string;
+  objects: GameObject[];
+};
 
 type Player = {
   x: number;
   y: number;
   id: string;
-  direction: string;
+  direction?: string;
   dead?: boolean;
+};
+
+type Snowball = {
+  x: number;
+  y: number;
+  id: string;
 };
 
 class Projectile extends Phaser.Physics.Arcade.Sprite {
@@ -49,7 +68,10 @@ export default class GameScene extends Phaser.Scene {
   moveRight: Boolean = false;
   moveUp: Boolean = false;
   otherPlayers: Player[] = [];
-  otherSprites: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody[] = [];
+  otherPlayerSprites: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody[] = [];
+  otherSnowballs: Snowball[] = [];
+  otherSnowballSprites: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody[] =
+    [];
   dead: Boolean = false;
 
   updateScoreBoard() {
@@ -75,6 +97,65 @@ export default class GameScene extends Phaser.Scene {
     this.physics.add.collider(this.snowballs, this.platforms, (snowball) => {
       snowball.destroy();
     });
+  }
+
+  sendPlayerData() {
+    partySocket.send(
+      JSON.stringify({
+        x: this.player.x,
+        y: this.player.y,
+        direction: this.player.anims.currentAnim.key,
+        dead: this.dead,
+      })
+    );
+  }
+
+  destroyAllSprites() {
+    if (this.otherPlayerSprites && this.otherPlayerSprites.length) {
+      this.otherPlayerSprites.forEach((sprite) => {
+        sprite.destroy(true);
+      });
+      this.otherPlayerSprites = [];
+    }
+    if (this.otherSnowballSprites && this.otherSnowballSprites.length) {
+      this.otherSnowballSprites.forEach((sprite) => {
+        sprite.destroy(true);
+      });
+      this.otherSnowballSprites = [];
+    }
+  }
+
+  drawOtherSprites() {
+    if (this.otherPlayers) {
+      for (let i = 0; i < this.otherPlayers.length; i++) {
+        if (this.otherPlayers[i].id !== partySocket.id) {
+          const newSprite = this.physics.add.sprite(
+            this.otherPlayers[i].x,
+            this.otherPlayers[i].y,
+            "dude"
+          );
+          newSprite.anims.play(this.otherPlayers[i].direction, true);
+          this.otherPlayerSprites.push(newSprite);
+          this.physics.add.collider(this.player, newSprite);
+          this.physics.add.collider(this.snowballs, newSprite);
+        }
+      }
+    }
+    if (this.otherSnowballs) {
+      for (let i = 0; i < this.otherSnowballs.length; i++) {
+        if (this.otherSnowballs[i].id !== partySocket.id) {
+          const newSprite = this.physics.add.sprite(
+            this.otherSnowballs[i].x,
+            this.otherSnowballs[i].y,
+            "bomb"
+          );
+          this.otherSnowballSprites.push(newSprite);
+          this.physics.add.collider(this.player, newSprite, () => {
+            this.dead = true;
+          });
+        }
+      }
+    }
   }
 
   preload() {
@@ -107,7 +188,15 @@ export default class GameScene extends Phaser.Scene {
     // add shake camera effect when something cool happens ISSUE 10
     // see here https://labs.phaser.io/edit.html?src=src/camera/shake.js&v=3.60.0
     partySocket.addEventListener("message", (e) => {
-      this.otherPlayers = JSON.parse(e.data) as Player[];
+      const message = JSON.parse(e.data);
+      const m2 = JSON.parse(e.data) as Message;
+      console.log(message);
+      if (message.type === "players") {
+        console.log("players");
+        this.otherPlayers = message.objects as Player[];
+      } else if (message.type === "snowballs") {
+        this.otherSnowballs = message.objects as Snowball[];
+      }
     });
 
     this.snowballs = this.physics.add.group({
@@ -326,40 +415,14 @@ export default class GameScene extends Phaser.Scene {
       this.player.setVelocityY(-330);
     }
     this.updateScoreBoard();
-    this.frame++;
-    if (this.frame % 2 === 0) {
-      partySocket.send(
-        JSON.stringify({
-          x: this.player.x,
-          y: this.player.y,
-          direction: this.player.anims.currentAnim.key,
-          dead: this.dead,
-        })
-      );
+    this.sendPlayerData();
+    // this.frame++;
+    // if (this.frame % 2 === 0) {
 
-      if (this.otherSprites && this.otherSprites.length) {
-        this.otherSprites.forEach((sprite) => {
-          sprite.destroy(true);
-        });
-        this.otherSprites = [];
-      }
+    this.destroyAllSprites();
+    this.drawOtherSprites();
 
-      if (this.otherPlayers) {
-        for (let i = 0; i < this.otherPlayers.length; i++) {
-          if (this.otherPlayers[i].id !== partySocket.id) {
-            const newSprite = this.physics.add.sprite(
-              this.otherPlayers[i].x,
-              this.otherPlayers[i].y,
-              this.otherPlayers[i].dead ? "deadDude" : "dude"
-            );
-            //newSprite.anims.play(this.otherPlayers[i].direction, true);
-            this.otherSprites.push(newSprite);
-            this.physics.add.collider(this.player, newSprite);
-            this.physics.add.collider(this.snowballs, newSprite);
-          }
-        }
-      }
-    }
-    if (this.frame === 60) this.frame = 0;
+    // }
+    // if (this.frame === 60) this.frame = 0;
   }
 }
