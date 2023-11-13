@@ -10,12 +10,23 @@ const partySocket = new PartySocket({
   room: "my-room",
 });
 
+type Message = {
+  type: string;
+  objects: Player[] | Snowball[];
+};
+
 type Player = {
   x: number;
   y: number;
   id: string;
   direction: string;
   dead?: boolean;
+};
+
+type Snowball = {
+  x: number;
+  y: number;
+  id: string;
 };
 
 class Projectile extends Phaser.Physics.Arcade.Sprite {
@@ -49,8 +60,14 @@ export default class GameScene extends Phaser.Scene {
   moveRight: Boolean = false;
   moveUp: Boolean = false;
   otherPlayers: Player[] = [];
-  otherSprites: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody[] = [];
+  otherPlayerSprites: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody[] = [];
+  otherSnowballs: Snowball[] = [];
+  otherSnowballSprites: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody[] =
+    [];
   dead: Boolean = false;
+  realSnowball: any;
+  direction: string = "turn";
+  canThrowSnowball: Boolean = true;
 
   updateScoreBoard() {
     let ids = [] as string[];
@@ -69,12 +86,94 @@ export default class GameScene extends Phaser.Scene {
       y,
     });
     this.snowballs.add(snowball, true);
+    this.realSnowball = snowball;
     direction === "left"
       ? snowball.setVelocityX(-500)
       : snowball.setVelocityX(500);
     this.physics.add.collider(this.snowballs, this.platforms, (snowball) => {
       snowball.destroy();
     });
+  }
+
+  sendPlayerData() {
+    if (this.player)
+      partySocket.send(
+        JSON.stringify({
+          type: "players",
+          object: {
+            x: this.player.x,
+            y: this.player.y,
+            direction: this.player.anims.currentAnim.key,
+            dead: this.dead,
+          },
+        })
+      );
+  }
+
+  sendSnowballData() {
+    if (this.realSnowball)
+      partySocket.send(
+        JSON.stringify({
+          type: "snowballs",
+          object: {
+            x: this.realSnowball.x,
+            y: this.realSnowball.y,
+          },
+        })
+      );
+  }
+
+  destroyAllSprites() {
+    if (this.otherPlayerSprites && this.otherPlayerSprites.length) {
+      this.otherPlayerSprites.forEach((sprite) => {
+        sprite.destroy(true);
+      });
+      this.otherPlayerSprites = [];
+    }
+    if (this.otherSnowballSprites && this.otherSnowballSprites.length) {
+      this.otherSnowballSprites.forEach((sprite) => {
+        sprite.destroy(true);
+      });
+      this.otherSnowballSprites = [];
+    }
+  }
+
+  drawOtherSprites() {
+    if (this.otherPlayers) {
+      for (let i = 0; i < this.otherPlayers.length; i++) {
+        if (this.otherPlayers[i].id !== partySocket.id) {
+          const newSprite = this.physics.add.sprite(
+            this.otherPlayers[i].x,
+            this.otherPlayers[i].y,
+            "dude"
+          );
+          newSprite.anims.play(this.otherPlayers[i].direction, true);
+          this.otherPlayerSprites.push(newSprite);
+          this.physics.add.collider(this.player, newSprite);
+          this.physics.add.collider(this.snowballs, newSprite);
+        }
+      }
+    }
+    if (this.otherSnowballs) {
+      for (let i = 0; i < this.otherSnowballs.length; i++) {
+        if (this.otherSnowballs[i].id !== partySocket.id) {
+          const newSprite = this.physics.add.sprite(
+            this.otherSnowballs[i].x,
+            this.otherSnowballs[i].y,
+            "bomb"
+          );
+          this.otherSnowballSprites.push(newSprite);
+          this.physics.add.collider(this.player, newSprite, () => {
+            this.dead = true;
+            this.physics.pause();
+            this.player.setTint(0xff0000);
+            this.player.anims.play("turn");
+            this.gameOver = true;
+            this.dead = true;
+          });
+        }
+      }
+    }
   }
 
   preload() {
@@ -87,7 +186,6 @@ export default class GameScene extends Phaser.Scene {
     });
     this.load.image("platform", "assets/ice_platform.png");
     this.load.image("platform_small", "assets/ice_platform_small.png");
-    this.load.image("gift", "assets/christmas-gift.png");
     this.load.image("bomb", "assets/bomb.png");
     this.load.image("left", "assets/left.png");
     this.load.image("right", "assets/right.png");
@@ -97,17 +195,19 @@ export default class GameScene extends Phaser.Scene {
       frameWidth: 32,
       frameHeight: 48,
     });
-    this.load.spritesheet("deadDude", "assets/dead_dude.png", {
-      frameWidth: 32,
-      frameHeight: 48,
-    });
   }
 
   create() {
     // add shake camera effect when something cool happens ISSUE 10
     // see here https://labs.phaser.io/edit.html?src=src/camera/shake.js&v=3.60.0
     partySocket.addEventListener("message", (e) => {
-      this.otherPlayers = JSON.parse(e.data) as Player[];
+      const message = JSON.parse(e.data) as Message;
+      console.log(message);
+      if (message.type === "players") {
+        this.otherPlayers = message.objects as Player[];
+      } else if (message.type === "snowballs") {
+        this.otherSnowballs = message.objects as Snowball[];
+      }
     });
 
     this.snowballs = this.physics.add.group({
@@ -237,74 +337,14 @@ export default class GameScene extends Phaser.Scene {
     );
 
     spaceBar.on("down", () => {
-      this.throwSnowball(
-        this.player.x,
-        this.player.y,
-        this.player.anims.currentAnim.key
-      );
-    });
-
-    this.gifts = this.physics.add.group({
-      key: "gift",
-      repeat: 11,
-      setXY: { x: 12, y: 0, stepX: 70 },
-    });
-
-    this.gifts.children.iterate(function (child: any) {
-      child.setBounceY(Phaser.Math.FloatBetween(0.2, 0.5));
-    });
-
-    // gift and platform collider check
-    this.physics.add.collider(this.gifts, this.platforms);
-
-    // check if player hits gift - if yes trigger collectGift
-    this.physics.add.overlap(this.player, this.gifts, collectGift, null, this);
-
-    // example arrow function, from Robin's branch
-
-    //  const collectGift = (player: any, gift: any) => {
-    // 	  gift.disableBody(true, true);
-    // 	  this.score += 100;
-    // 	  this.scoreText.setText("Score: " + this.score);
-    //     ...
-    //	   ...
-    //  };
-    function collectGift(player: any, gift: any) {
-      gift.disableBody(true, true);
-      this.score += 10;
-      this.scoreText.setText("Score: " + this.score);
-
-      var x =
-        player.x < 400
-          ? Phaser.Math.Between(400, 800)
-          : Phaser.Math.Between(0, 400);
-
-      var bomb = this.bombs.create(x, 16, "bomb");
-      bomb.setBounce(1);
-      bomb.setCollideWorldBounds(true);
-      bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
-      if (this.gifts.countActive(true) === 0) {
-        this.gifts.children.iterate(function (child: any) {
-          child.enableBody(true, child.x, 0, true, true);
-        });
+      if (this.canThrowSnowball) {
+        this.throwSnowball(this.player.x, this.player.y, this.direction);
+        this.canThrowSnowball = false;
+        setTimeout(() => {
+          this.canThrowSnowball = true;
+        }, 4000);
       }
-    }
-
-    // Create bombs and trigger hitBomb if player collides with gift
-    this.bombs = this.physics.add.group();
-    this.physics.add.collider(this.bombs, this.platforms);
-    this.physics.add.collider(this.player, this.bombs, hitBomb, null, this);
-
-    function hitBomb(player: any, bomb: any) {
-      this.physics.pause();
-      player.setTint(0xff0000);
-      player.anims.play("turn");
-      this.gameOver = true;
-      this.dead = true;
-
-      // PLAY GAMEOVERSCENE ISSUE 13
-      // add more scenes?
-    }
+    });
   }
 
   update() {
@@ -312,9 +352,11 @@ export default class GameScene extends Phaser.Scene {
     if (this.cursors.left.isDown || this.moveLeft) {
       this.player.setVelocityX(-160);
       this.player.anims.play("left", true);
+      this.direction = "left";
     } else if (this.cursors.right.isDown || this.moveRight) {
       this.player.setVelocityX(160);
       this.player.anims.play("right", true);
+      this.direction = "right";
     } else {
       this.player.setVelocityX(0);
       this.player.anims.play("turn");
@@ -326,40 +368,15 @@ export default class GameScene extends Phaser.Scene {
       this.player.setVelocityY(-330);
     }
     this.updateScoreBoard();
-    this.frame++;
-    if (this.frame % 2 === 0) {
-      partySocket.send(
-        JSON.stringify({
-          x: this.player.x,
-          y: this.player.y,
-          direction: this.player.anims.currentAnim.key,
-          dead: this.dead,
-        })
-      );
+    this.sendPlayerData();
+    this.sendSnowballData();
+    // this.frame++;
+    // if (this.frame % 2 === 0) {
 
-      if (this.otherSprites && this.otherSprites.length) {
-        this.otherSprites.forEach((sprite) => {
-          sprite.destroy(true);
-        });
-        this.otherSprites = [];
-      }
+    this.destroyAllSprites();
+    this.drawOtherSprites();
 
-      if (this.otherPlayers) {
-        for (let i = 0; i < this.otherPlayers.length; i++) {
-          if (this.otherPlayers[i].id !== partySocket.id) {
-            const newSprite = this.physics.add.sprite(
-              this.otherPlayers[i].x,
-              this.otherPlayers[i].y,
-              this.otherPlayers[i].dead ? "deadDude" : "dude"
-            );
-            //newSprite.anims.play(this.otherPlayers[i].direction, true);
-            this.otherSprites.push(newSprite);
-            this.physics.add.collider(this.player, newSprite);
-            this.physics.add.collider(this.snowballs, newSprite);
-          }
-        }
-      }
-    }
-    if (this.frame === 60) this.frame = 0;
+    // }
+    // if (this.frame === 60) this.frame = 0;
   }
 }
