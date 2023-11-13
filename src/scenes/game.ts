@@ -1,5 +1,3 @@
-import { Game } from "phaser";
-import GameOverScene from "./gameover";
 import PartySocket from "partysocket";
 
 // dev host: http://127.0.0.1:1999
@@ -51,6 +49,11 @@ export default class GameScene extends Phaser.Scene {
   otherPlayers: Player[] = [];
   otherSprites: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody[] = [];
   dead: Boolean = false;
+  playerName: string = "";
+
+  init(data: any) {
+    this.playerName = data.name;
+  }
 
   updateScoreBoard() {
     let ids = [] as string[];
@@ -58,7 +61,7 @@ export default class GameScene extends Phaser.Scene {
     this.otherPlayers.forEach((player) => {
       player.id !== partySocket.id
         ? ids.push(`other player: ${player.id}`)
-        : ids.push(`you: ${player.id}`);
+        : ids.push(`you: ${player.id} name: ${this.playerName}`);
     });
     this.scoreBoard.setText(ids);
   }
