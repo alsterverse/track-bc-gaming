@@ -10,24 +10,16 @@ const partySocket = new PartySocket({
   room: "my-room",
 });
 
-type GameObject = {
-  x: number;
-  y: number;
-  id: string;
-  direction?: string;
-  dead?: boolean;
-};
-
 type Message = {
   type: string;
-  objects: GameObject[];
+  objects: Player[] | Snowball[];
 };
 
 type Player = {
   x: number;
   y: number;
   id: string;
-  direction?: string;
+  direction: string;
   dead?: boolean;
 };
 
@@ -73,6 +65,9 @@ export default class GameScene extends Phaser.Scene {
   otherSnowballSprites: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody[] =
     [];
   dead: Boolean = false;
+  realSnowball: any;
+  direction: string = "turn";
+  canThrowSnowball: Boolean = true;
 
   updateScoreBoard() {
     let ids = [] as string[];
@@ -91,6 +86,7 @@ export default class GameScene extends Phaser.Scene {
       y,
     });
     this.snowballs.add(snowball, true);
+    this.realSnowball = snowball;
     direction === "left"
       ? snowball.setVelocityX(-500)
       : snowball.setVelocityX(500);
@@ -100,14 +96,31 @@ export default class GameScene extends Phaser.Scene {
   }
 
   sendPlayerData() {
-    partySocket.send(
-      JSON.stringify({
-        x: this.player.x,
-        y: this.player.y,
-        direction: this.player.anims.currentAnim.key,
-        dead: this.dead,
-      })
-    );
+    if (this.player)
+      partySocket.send(
+        JSON.stringify({
+          type: "players",
+          object: {
+            x: this.player.x,
+            y: this.player.y,
+            direction: this.player.anims.currentAnim.key,
+            dead: this.dead,
+          },
+        })
+      );
+  }
+
+  sendSnowballData() {
+    if (this.realSnowball)
+      partySocket.send(
+        JSON.stringify({
+          type: "snowballs",
+          object: {
+            x: this.realSnowball.x,
+            y: this.realSnowball.y,
+          },
+        })
+      );
   }
 
   destroyAllSprites() {
@@ -152,6 +165,11 @@ export default class GameScene extends Phaser.Scene {
           this.otherSnowballSprites.push(newSprite);
           this.physics.add.collider(this.player, newSprite, () => {
             this.dead = true;
+            this.physics.pause();
+            this.player.setTint(0xff0000);
+            this.player.anims.play("turn");
+            this.gameOver = true;
+            this.dead = true;
           });
         }
       }
@@ -168,7 +186,6 @@ export default class GameScene extends Phaser.Scene {
     });
     this.load.image("platform", "assets/ice_platform.png");
     this.load.image("platform_small", "assets/ice_platform_small.png");
-    this.load.image("gift", "assets/christmas-gift.png");
     this.load.image("bomb", "assets/bomb.png");
     this.load.image("left", "assets/left.png");
     this.load.image("right", "assets/right.png");
@@ -178,21 +195,15 @@ export default class GameScene extends Phaser.Scene {
       frameWidth: 32,
       frameHeight: 48,
     });
-    this.load.spritesheet("deadDude", "assets/dead_dude.png", {
-      frameWidth: 32,
-      frameHeight: 48,
-    });
   }
 
   create() {
     // add shake camera effect when something cool happens ISSUE 10
     // see here https://labs.phaser.io/edit.html?src=src/camera/shake.js&v=3.60.0
     partySocket.addEventListener("message", (e) => {
-      const message = JSON.parse(e.data);
-      const m2 = JSON.parse(e.data) as Message;
+      const message = JSON.parse(e.data) as Message;
       console.log(message);
       if (message.type === "players") {
-        console.log("players");
         this.otherPlayers = message.objects as Player[];
       } else if (message.type === "snowballs") {
         this.otherSnowballs = message.objects as Snowball[];
@@ -326,74 +337,14 @@ export default class GameScene extends Phaser.Scene {
     );
 
     spaceBar.on("down", () => {
-      this.throwSnowball(
-        this.player.x,
-        this.player.y,
-        this.player.anims.currentAnim.key
-      );
-    });
-
-    this.gifts = this.physics.add.group({
-      key: "gift",
-      repeat: 11,
-      setXY: { x: 12, y: 0, stepX: 70 },
-    });
-
-    this.gifts.children.iterate(function (child: any) {
-      child.setBounceY(Phaser.Math.FloatBetween(0.2, 0.5));
-    });
-
-    // gift and platform collider check
-    this.physics.add.collider(this.gifts, this.platforms);
-
-    // check if player hits gift - if yes trigger collectGift
-    this.physics.add.overlap(this.player, this.gifts, collectGift, null, this);
-
-    // example arrow function, from Robin's branch
-
-    //  const collectGift = (player: any, gift: any) => {
-    // 	  gift.disableBody(true, true);
-    // 	  this.score += 100;
-    // 	  this.scoreText.setText("Score: " + this.score);
-    //     ...
-    //	   ...
-    //  };
-    function collectGift(player: any, gift: any) {
-      gift.disableBody(true, true);
-      this.score += 10;
-      this.scoreText.setText("Score: " + this.score);
-
-      var x =
-        player.x < 400
-          ? Phaser.Math.Between(400, 800)
-          : Phaser.Math.Between(0, 400);
-
-      var bomb = this.bombs.create(x, 16, "bomb");
-      bomb.setBounce(1);
-      bomb.setCollideWorldBounds(true);
-      bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
-      if (this.gifts.countActive(true) === 0) {
-        this.gifts.children.iterate(function (child: any) {
-          child.enableBody(true, child.x, 0, true, true);
-        });
+      if (this.canThrowSnowball) {
+        this.throwSnowball(this.player.x, this.player.y, this.direction);
+        this.canThrowSnowball = false;
+        setTimeout(() => {
+          this.canThrowSnowball = true;
+        }, 4000);
       }
-    }
-
-    // Create bombs and trigger hitBomb if player collides with gift
-    this.bombs = this.physics.add.group();
-    this.physics.add.collider(this.bombs, this.platforms);
-    this.physics.add.collider(this.player, this.bombs, hitBomb, null, this);
-
-    function hitBomb(player: any, bomb: any) {
-      this.physics.pause();
-      player.setTint(0xff0000);
-      player.anims.play("turn");
-      this.gameOver = true;
-      this.dead = true;
-
-      // PLAY GAMEOVERSCENE ISSUE 13
-      // add more scenes?
-    }
+    });
   }
 
   update() {
@@ -401,9 +352,11 @@ export default class GameScene extends Phaser.Scene {
     if (this.cursors.left.isDown || this.moveLeft) {
       this.player.setVelocityX(-160);
       this.player.anims.play("left", true);
+      this.direction = "left";
     } else if (this.cursors.right.isDown || this.moveRight) {
       this.player.setVelocityX(160);
       this.player.anims.play("right", true);
+      this.direction = "right";
     } else {
       this.player.setVelocityX(0);
       this.player.anims.play("turn");
@@ -416,6 +369,7 @@ export default class GameScene extends Phaser.Scene {
     }
     this.updateScoreBoard();
     this.sendPlayerData();
+    this.sendSnowballData();
     // this.frame++;
     // if (this.frame % 2 === 0) {
 
