@@ -1,5 +1,3 @@
-import { Game } from "phaser";
-import GameOverScene from "./gameover";
 import PartySocket from "partysocket";
 
 // dev host: http://127.0.0.1:1999
@@ -68,16 +66,32 @@ export default class GameScene extends Phaser.Scene {
   realSnowball: any;
   direction: string = "turn";
   canThrowSnowball: Boolean = true;
+  playerName: string = "";
+  playerNameTag: any;
+
+  init(data: any) {
+    console.log(data);
+    this.playerName = data.name;
+  }
 
   updateScoreBoard() {
     let ids = [] as string[];
     ids.push(`players`);
     this.otherPlayers.forEach((player) => {
       player.id !== partySocket.id
-        ? ids.push(`other player: ${player.id}`)
-        : ids.push(`you: ${player.id}`);
+        ? ids.push(`${player.id}`)
+        : ids.push(`${this.playerName}`);
     });
     this.scoreBoard.setText(ids);
+  }
+
+  updatePlayerNameTag() {
+    this.playerNameTag.destroy();
+    this.playerNameTag = this.add.text(
+      this.player.x - this.playerName.length * 5,
+      this.player.y + -40,
+      this.playerName
+    );
   }
 
   throwSnowball(x: number, y: number, direction?: string) {
@@ -188,9 +202,6 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("platform", "assets/ice_platform.png");
     this.load.image("platform_small", "assets/ice_platform_small.png");
     this.load.image("bomb", "assets/bomb.png");
-    this.load.image("left", "assets/left.png");
-    this.load.image("right", "assets/right.png");
-    this.load.image("up", "assets/up.png");
 
     this.load.spritesheet("man", "assets/player_animation.png", {
       frameWidth: 66,
@@ -203,7 +214,6 @@ export default class GameScene extends Phaser.Scene {
     // see here https://labs.phaser.io/edit.html?src=src/camera/shake.js&v=3.60.0
     partySocket.addEventListener("message", (e) => {
       const message = JSON.parse(e.data) as Message;
-      console.log(message);
       if (message.type === "players") {
         this.otherPlayers = message.objects as Player[];
       } else if (message.type === "snowballs") {
@@ -229,56 +239,6 @@ export default class GameScene extends Phaser.Scene {
     });
 
     this.background.anims.play("snow", true);
-
-    this.left = this.add.image(250, 650, "left");
-    this.right = this.add.image(350, 650, "right");
-    this.up = this.add.image(500, 650, "up");
-
-    this.left.scale;
-    this.up.scale;
-    this.right.scale;
-
-    const lefthitArea = new Phaser.Geom.Rectangle(
-      this.left.frame.x,
-      this.left.frame.y,
-      this.left.frame.width,
-      this.left.frame.height
-    );
-    const righthitArea = new Phaser.Geom.Rectangle(
-      this.up.frame.x,
-      this.up.frame.y,
-      this.up.frame.width,
-      this.up.frame.height
-    );
-    const uphitArea = new Phaser.Geom.Rectangle(
-      this.up.frame.x,
-      this.up.frame.y,
-      this.up.frame.width,
-      this.up.frame.height
-    );
-
-    this.left.setInteractive(lefthitArea, Phaser.Geom.Rectangle.Contains);
-    this.right.setInteractive(righthitArea, Phaser.Geom.Rectangle.Contains);
-    this.up.setInteractive(uphitArea, Phaser.Geom.Rectangle.Contains);
-
-    this.left.on("pointerdown", () => {
-      this.moveLeft = true;
-    });
-    this.left.on("pointerup", () => {
-      this.moveLeft = false;
-    });
-    this.right.on("pointerdown", () => {
-      this.moveRight = true;
-    });
-    this.right.on("pointerup", () => {
-      this.moveRight = false;
-    });
-    this.up.on("pointerdown", () => {
-      this.moveUp = true;
-    });
-    this.up.on("pointerup", () => {
-      this.moveUp = false;
-    });
 
     //add new graphics ISSUE 9
 
@@ -333,6 +293,7 @@ export default class GameScene extends Phaser.Scene {
 
     this.scoreText = this.add.text(16, 16, "score: 0");
     this.scoreBoard = this.add.text(16, 32, "players");
+    this.playerNameTag = this.add.text(this.player.x, this.player.y, "");
 
     // player and platform collider check
     this.physics.add.collider(this.player, this.platforms);
@@ -387,6 +348,7 @@ export default class GameScene extends Phaser.Scene {
     }
 
     this.updateScoreBoard();
+    this.updatePlayerNameTag();
     this.sendPlayerData();
     this.sendSnowballData();
     // this.frame++;

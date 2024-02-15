@@ -1,11 +1,14 @@
 import Phaser = require("phaser");
 import GameScene from "./scenes/game";
-import GameOverScene from "./scenes/gameover";
+import StartScene from "./scenes/start";
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   width: 1500,
   height: 700,
+  dom: {
+    createContainer: true,
+  },
   physics: {
     default: "arcade",
     arcade: {
@@ -20,7 +23,7 @@ const config: Phaser.Types.Core.GameConfig = {
     width: 1500,
     height: 800,
   },
-  scene: [GameScene, GameOverScene],
+  scene: [StartScene, GameScene],
   input: {
     activePointers: 3, // 2 is default for mouse + pointer, +1 is required for dual touch
   },
