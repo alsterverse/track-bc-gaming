@@ -145,7 +145,7 @@ export default class GameScene extends Phaser.Scene {
           const newSprite = this.physics.add.sprite(
             this.otherPlayers[i].x,
             this.otherPlayers[i].y,
-            "dude"
+            "man"
           );
           newSprite.anims.play(this.otherPlayers[i].direction, true);
           this.otherPlayerSprites.push(newSprite);
@@ -192,9 +192,9 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("right", "assets/right.png");
     this.load.image("up", "assets/up.png");
 
-    this.load.spritesheet("dude", "assets/dude.png", {
-      frameWidth: 32,
-      frameHeight: 48,
+    this.load.spritesheet("man", "assets/player_animation.png", {
+      frameWidth: 66,
+      frameHeight: 69,
     });
   }
 
@@ -297,8 +297,7 @@ export default class GameScene extends Phaser.Scene {
     // ISSUE 7
 
     // player dude
-    this.player = this.physics.add.sprite(375, 100, "dude");
-    this.player.setBounce(0.2);
+    this.player = this.physics.add.sprite(375, 70, "man");
     this.player.setCollideWorldBounds(true);
 
     // this.cameras.main.setSize(200, 300);
@@ -307,21 +306,28 @@ export default class GameScene extends Phaser.Scene {
     // refactor player movement, add mobile device movement.  ISSUE 2
     this.anims.create({
       key: "left",
-      frames: this.anims.generateFrameNumbers("dude", { start: 0, end: 3 }),
-      frameRate: 10,
+      frames: this.anims.generateFrameNumbers("man", { start: 0, end: 16 }),
+      frameRate: 24,
       repeat: -1,
     });
 
     this.anims.create({
       key: "turn",
-      frames: [{ key: "dude", frame: 4 }],
-      frameRate: 20,
+      frames: [{ key: "man", frame: 17 }],
+      frameRate: 24,
     });
 
     this.anims.create({
       key: "right",
-      frames: this.anims.generateFrameNumbers("dude", { start: 5, end: 8 }),
-      frameRate: 10,
+      frames: this.anims.generateFrameNumbers("man", { start: 19, end: 35 }),
+      frameRate: 24,
+      repeat: -1,
+    });
+
+    this.anims.create({
+      key: "jump",
+      frames: this.anims.generateFrameNumbers("man", { start: 36, end: 52 }),
+      frameRate: 48,
       repeat: -1,
     });
 
@@ -352,15 +358,14 @@ export default class GameScene extends Phaser.Scene {
     this;
     if (this.cursors.left.isDown || this.moveLeft) {
       this.player.setVelocityX(-325);
-      this.player.anims.play("left", true);
+
       this.direction = "left";
     } else if (this.cursors.right.isDown || this.moveRight) {
       this.player.setVelocityX(325);
-      this.player.anims.play("right", true);
+
       this.direction = "right";
     } else {
       this.player.setVelocityX(0);
-      this.player.anims.play("turn");
     }
     if (
       (this.cursors.up.isDown || this.moveUp) &&
@@ -368,6 +373,17 @@ export default class GameScene extends Phaser.Scene {
     ) {
       this.player.setVelocityY(-650).setGravityY(300);
     }
+
+    if (!this.player.body.touching.down) {
+      this.player.anims.play("jump", true);
+    } else if (this.cursors.left.isDown || this.moveLeft) {
+      this.player.anims.play("left", true);
+    } else if (this.cursors.right.isDown || this.moveRight) {
+      this.player.anims.play("right", true);
+    } else {
+      this.player.anims.play("turn");
+    }
+
     this.updateScoreBoard();
     this.sendPlayerData();
     this.sendSnowballData();
