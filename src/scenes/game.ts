@@ -169,8 +169,8 @@ export default class GameScene extends Phaser.Scene {
             this.player.setTint(0xff0000);
             this.player.anims.play("turn");
             this.gameOver = true;
-            this.dead = true;
-            this.scene.start("game");
+            new Audio("assets/game-over.mp3").play();
+            setTimeout(() => this.scene.start("game"), 2000);
           });
         }
       }
@@ -346,6 +346,7 @@ export default class GameScene extends Phaser.Scene {
     spaceBar.on("down", () => {
       if (this.canThrowSnowball) {
         this.throwSnowball(this.player.x, this.player.y, this.direction);
+        new Audio("assets/peow.mp3").play();
         this.canThrowSnowball = false;
         setTimeout(() => {
           this.canThrowSnowball = true;
@@ -372,6 +373,7 @@ export default class GameScene extends Phaser.Scene {
       this.player.body.touching.down
     ) {
       this.player.setVelocityY(-650).setGravityY(300);
+      new Audio("assets/jump.mp3").play();
     }
 
     if (!this.player.body.touching.down) {
