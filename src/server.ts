@@ -26,6 +26,10 @@ let snowballs: Snowball[] = [];
 export default class Server implements Party.Server {
   constructor(readonly party: Party.Party) {}
 
+  onStart(){
+    //set first alarm
+    this.party.storage.setAlarm(Date.now() + 33);
+  }
   onConnect(conn: Party.Connection, ctx: Party.ConnectionContext) {
     players.push({ x: 0, y: 0, id: conn.id, direction: "turn" });
     snowballs.push({ x: 800, y: 800, id: conn.id, direction: "right" });
@@ -62,6 +66,11 @@ export default class Server implements Party.Server {
         }
       });
     }
+
+  }
+
+  onAlarm() {
+    // do something
     const playersMessage = JSON.stringify({
       type: "players",
       objects: players,
@@ -71,9 +80,16 @@ export default class Server implements Party.Server {
       objects: snowballs,
     });
 
-    this.party.broadcast(playersMessage);
-    this.party.broadcast(snowballsMessage);
+      this.party.broadcast(playersMessage)
+      this.party.broadcast(snowballsMessage)
+      console.log(playersMessage)
+
+    // (optional) schedule next alarm in 5 minutes
+    this.party.storage.setAlarm(Date.now() + 33);
   }
+  
+  
 }
+
 
 Server satisfies Party.Worker;
