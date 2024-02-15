@@ -192,9 +192,6 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("platform", "assets/ice_platform.png");
     this.load.image("platform_small", "assets/ice_platform_small.png");
     this.load.image("bomb", "assets/bomb.png");
-    this.load.image("left", "assets/left.png");
-    this.load.image("right", "assets/right.png");
-    this.load.image("up", "assets/up.png");
 
     this.load.spritesheet("dude", "assets/dude.png", {
       frameWidth: 32,
@@ -232,56 +229,6 @@ export default class GameScene extends Phaser.Scene {
     });
 
     this.background.anims.play("snow", true);
-
-    this.left = this.add.image(250, 650, "left");
-    this.right = this.add.image(350, 650, "right");
-    this.up = this.add.image(500, 650, "up");
-
-    this.left.scale;
-    this.up.scale;
-    this.right.scale;
-
-    const lefthitArea = new Phaser.Geom.Rectangle(
-      this.left.frame.x,
-      this.left.frame.y,
-      this.left.frame.width,
-      this.left.frame.height
-    );
-    const righthitArea = new Phaser.Geom.Rectangle(
-      this.up.frame.x,
-      this.up.frame.y,
-      this.up.frame.width,
-      this.up.frame.height
-    );
-    const uphitArea = new Phaser.Geom.Rectangle(
-      this.up.frame.x,
-      this.up.frame.y,
-      this.up.frame.width,
-      this.up.frame.height
-    );
-
-    this.left.setInteractive(lefthitArea, Phaser.Geom.Rectangle.Contains);
-    this.right.setInteractive(righthitArea, Phaser.Geom.Rectangle.Contains);
-    this.up.setInteractive(uphitArea, Phaser.Geom.Rectangle.Contains);
-
-    this.left.on("pointerdown", () => {
-      this.moveLeft = true;
-    });
-    this.left.on("pointerup", () => {
-      this.moveLeft = false;
-    });
-    this.right.on("pointerdown", () => {
-      this.moveRight = true;
-    });
-    this.right.on("pointerup", () => {
-      this.moveRight = false;
-    });
-    this.up.on("pointerdown", () => {
-      this.moveUp = true;
-    });
-    this.up.on("pointerup", () => {
-      this.moveUp = false;
-    });
 
     //add new graphics ISSUE 9
 
