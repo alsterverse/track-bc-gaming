@@ -78,8 +78,8 @@ export default class GameScene extends Phaser.Scene {
     ids.push(`players`);
     this.otherPlayers.forEach((player) => {
       player.id !== partySocket.id
-        ? ids.push(`other player: ${player.id}`)
-        : ids.push(`you: ${player.id} name: ${this.playerName}`);
+        ? ids.push(`${player.id}`)
+        : ids.push(`${this.playerName}`);
     });
     this.scoreBoard.setText(ids);
   }

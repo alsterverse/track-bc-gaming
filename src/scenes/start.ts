@@ -32,6 +32,9 @@ export default class StartScene extends Phaser.Scene {
             this.removeListener("click");
             text.setText(`Welcome ${name.value}`);
             this.scene.name = name.value;
+            this.scene.scene.start("game", {
+              name: this.scene.name !== "" ? this.scene.name : "Player",
+            });
           }
         }
       }
