@@ -170,6 +170,7 @@ export default class GameScene extends Phaser.Scene {
             this.player.anims.play("turn");
             this.gameOver = true;
             this.dead = true;
+            this.scene.start("game");
           });
         }
       }
@@ -297,7 +298,7 @@ export default class GameScene extends Phaser.Scene {
 
     // player dude
     this.player = this.physics.add.sprite(375, 100, "dude");
-    this.player.setBounce(0.3);
+    this.player.setBounce(0.2);
     this.player.setCollideWorldBounds(true);
 
     // this.cameras.main.setSize(200, 300);
@@ -350,11 +351,11 @@ export default class GameScene extends Phaser.Scene {
   update() {
     this;
     if (this.cursors.left.isDown || this.moveLeft) {
-      this.player.setVelocityX(-160);
+      this.player.setVelocityX(-325);
       this.player.anims.play("left", true);
       this.direction = "left";
     } else if (this.cursors.right.isDown || this.moveRight) {
-      this.player.setVelocityX(160);
+      this.player.setVelocityX(325);
       this.player.anims.play("right", true);
       this.direction = "right";
     } else {
@@ -365,7 +366,7 @@ export default class GameScene extends Phaser.Scene {
       (this.cursors.up.isDown || this.moveUp) &&
       this.player.body.touching.down
     ) {
-      this.player.setVelocityY(-330);
+      this.player.setVelocityY(-650).setGravityY(300);
       new Audio("assets/jump.mp3").play();
     }
     this.updateScoreBoard();
