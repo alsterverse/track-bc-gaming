@@ -1,0 +1,41 @@
+!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      #input-form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh; /* This makes the div take up the full height of the viewport */
+      }
+
+      .form-element {
+        padding: 20px;
+        font-size: 20px;
+        width: 380px;
+        height: 60px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="input-form">
+      <input
+        type="text"
+        class="form-element"
+        name="name"
+        placeholder="Enter name"
+      />
+      <br />
+      <input
+        type="button"
+        class="form-element"
+        name="submit-button"
+        value="Submit"
+      />
+    </div>
+  </body>
+</html>

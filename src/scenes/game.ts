@@ -1,5 +1,3 @@
-import { Game } from "phaser";
-import GameOverScene from "./gameover";
 import PartySocket from "partysocket";
 
 // dev host: http://127.0.0.1:1999
@@ -68,6 +66,12 @@ export default class GameScene extends Phaser.Scene {
   realSnowball: any;
   direction: string = "turn";
   canThrowSnowball: Boolean = true;
+  playerName: string = "";
+
+  init(data: any) {
+    console.log(data);
+    this.playerName = data.name;
+  }
 
   updateScoreBoard() {
     let ids = [] as string[];
@@ -75,7 +79,7 @@ export default class GameScene extends Phaser.Scene {
     this.otherPlayers.forEach((player) => {
       player.id !== partySocket.id
         ? ids.push(`other player: ${player.id}`)
-        : ids.push(`you: ${player.id}`);
+        : ids.push(`you: ${player.id} name: ${this.playerName}`);
     });
     this.scoreBoard.setText(ids);
   }
@@ -202,7 +206,6 @@ export default class GameScene extends Phaser.Scene {
     // see here https://labs.phaser.io/edit.html?src=src/camera/shake.js&v=3.60.0
     partySocket.addEventListener("message", (e) => {
       const message = JSON.parse(e.data) as Message;
-      console.log(message);
       if (message.type === "players") {
         this.otherPlayers = message.objects as Player[];
       } else if (message.type === "snowballs") {
