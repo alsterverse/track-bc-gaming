@@ -279,7 +279,7 @@ export default class GameScene extends Phaser.Scene {
 
     this.anims.create({
       key: "right",
-      frames: this.anims.generateFrameNumbers("man", { start: 19, end: 35 }),
+      frames: this.anims.generateFrameNumbers("man", { start: 19, end: 34 }),
       frameRate: 24,
       repeat: -1,
     });
