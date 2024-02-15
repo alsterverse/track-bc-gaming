@@ -170,6 +170,7 @@ export default class GameScene extends Phaser.Scene {
             this.player.anims.play("turn");
             this.gameOver = true;
             this.dead = true;
+            this.scene.start("game");
           });
         }
       }
