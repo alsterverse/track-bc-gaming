@@ -366,6 +366,7 @@ export default class GameScene extends Phaser.Scene {
       this.player.body.touching.down
     ) {
       this.player.setVelocityY(-330);
+      new Audio("assets/jump.mp3").play();
     }
     this.updateScoreBoard();
     this.sendPlayerData();
