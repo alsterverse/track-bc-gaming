@@ -67,6 +67,7 @@ export default class GameScene extends Phaser.Scene {
   direction: string = "turn";
   canThrowSnowball: Boolean = true;
   playerName: string = "";
+  playerNameTag: any;
 
   init(data: any) {
     console.log(data);
@@ -82,6 +83,15 @@ export default class GameScene extends Phaser.Scene {
         : ids.push(`${this.playerName}`);
     });
     this.scoreBoard.setText(ids);
+  }
+
+  updatePlayerNameTag() {
+    this.playerNameTag.destroy();
+    this.playerNameTag = this.add.text(
+      this.player.x - this.playerName.length * 5,
+      this.player.y + -40,
+      this.playerName
+    );
   }
 
   throwSnowball(x: number, y: number, direction?: string) {
@@ -277,6 +287,7 @@ export default class GameScene extends Phaser.Scene {
 
     this.scoreText = this.add.text(16, 16, "score: 0");
     this.scoreBoard = this.add.text(16, 32, "players");
+    this.playerNameTag = this.add.text(this.player.x, this.player.y, "");
 
     // player and platform collider check
     this.physics.add.collider(this.player, this.platforms);
@@ -319,6 +330,7 @@ export default class GameScene extends Phaser.Scene {
       this.player.setVelocityY(-650).setGravityY(300);
     }
     this.updateScoreBoard();
+    this.updatePlayerNameTag();
     this.sendPlayerData();
     this.sendSnowballData();
     // this.frame++;
