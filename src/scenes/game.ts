@@ -17,6 +17,7 @@ type Player = {
   x: number;
   y: number;
   id: string;
+  name: string;
   direction: string;
   dead?: boolean;
 };
@@ -68,6 +69,7 @@ export default class GameScene extends Phaser.Scene {
   canThrowSnowball: Boolean = true;
   playerName: string = "";
   playerNameTag: any;
+  otherPlayerNameTags: any[] = [];
 
   init(data: any) {
     console.log(data);
@@ -79,7 +81,7 @@ export default class GameScene extends Phaser.Scene {
     ids.push(`players`);
     this.otherPlayers.forEach((player) => {
       player.id !== partySocket.id
-        ? ids.push(`${player.id}`)
+        ? ids.push(`${player.name}`)
         : ids.push(`${this.playerName}`);
     });
     this.scoreBoard.setText(ids);
@@ -92,6 +94,23 @@ export default class GameScene extends Phaser.Scene {
       this.player.y + -48,
       this.playerName
     );
+    if (this.otherPlayerNameTags && this.otherPlayerNameTags.length) {
+      this.otherPlayerNameTags.forEach((tag) => {
+        tag.destroy();
+      });
+    }
+    if (this.otherPlayers) {
+      this.otherPlayers.forEach((player) => {
+        if (player.id !== partySocket.id) {
+          const newTag = this.add.text(
+            player.x - player.name.length * 5,
+            player.y + -48,
+            player.name
+          );
+          this.otherPlayerNameTags.push(newTag);
+        }
+      });
+    }
   }
 
   throwSnowball(x: number, y: number, direction?: string) {
@@ -117,6 +136,7 @@ export default class GameScene extends Phaser.Scene {
           object: {
             x: this.player.x,
             y: this.player.y,
+            name: this.playerName,
             direction: this.player.anims.currentAnim.key,
             dead: this.dead,
           },

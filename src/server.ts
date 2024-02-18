@@ -9,6 +9,7 @@ type Player = {
   x: number;
   y: number;
   id: string;
+  name: string;
   direction: string;
   dead?: boolean;
 };
@@ -18,6 +19,7 @@ type Snowball = {
   x: number;
   y: number;
   id: string;
+  name: string;
   direction: string;
   dead?: boolean;
 };
@@ -26,13 +28,25 @@ let snowballs: Snowball[] = [];
 export default class Server implements Party.Server {
   constructor(readonly party: Party.Party) {}
 
-  onStart(){
+  onStart() {
     //set first alarm
     this.party.storage.setAlarm(Date.now() + 33);
   }
   onConnect(conn: Party.Connection, ctx: Party.ConnectionContext) {
-    players.push({ x: 0, y: 0, id: conn.id, direction: "turn" });
-    snowballs.push({ x: 800, y: 800, id: conn.id, direction: "right" });
+    players.push({
+      x: 0,
+      y: 0,
+      id: conn.id,
+      direction: "turn",
+      name: "playerName",
+    });
+    snowballs.push({
+      x: 800,
+      y: 800,
+      id: conn.id,
+      direction: "right",
+      name: "snowball",
+    });
     console.log(
       `Connected:
         id: ${conn.id}
@@ -56,6 +70,7 @@ export default class Server implements Party.Server {
           player.y = msg.object.y;
           player.direction = msg.object.direction;
           player.dead = msg.object.dead;
+          player.name = msg.object.name;
         }
       });
     } else if (msg.type === "snowballs") {
@@ -66,7 +81,6 @@ export default class Server implements Party.Server {
         }
       });
     }
-
   }
 
   onAlarm() {
@@ -80,16 +94,13 @@ export default class Server implements Party.Server {
       objects: snowballs,
     });
 
-      this.party.broadcast(playersMessage)
-      this.party.broadcast(snowballsMessage)
-      console.log(playersMessage)
+    this.party.broadcast(playersMessage);
+    this.party.broadcast(snowballsMessage);
+    console.log(playersMessage);
 
     // (optional) schedule next alarm in 5 minutes
     this.party.storage.setAlarm(Date.now() + 33);
   }
-  
-  
 }
-
 
 Server satisfies Party.Worker;
