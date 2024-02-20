@@ -4,7 +4,7 @@ import PartySocket from "partysocket";
 // prod host: https://mother-town.alsterjim.partykit.dev
 
 const partySocket = new PartySocket({
-  host: "https://mother-town.alsterjim.partykit.dev",
+  host: "https://party-yo.alsterjim.partykit.dev",
   room: "my-room",
 });
 

@@ -84,7 +84,16 @@ export default class Server implements Party.Server {
   }
 
   onAlarm() {
-    // do something
+    // one way to delete all players
+    // if (
+    //   players.length > 0 &&
+    //   players.find((player) => player.name === "deleteallplayers12345") !==
+    //     undefined
+    // ) {
+    //   players = [];
+    //   snowballs = [];
+    // }
+
     const playersMessage = JSON.stringify({
       type: "players",
       objects: players,
@@ -96,9 +105,8 @@ export default class Server implements Party.Server {
 
     this.party.broadcast(playersMessage);
     this.party.broadcast(snowballsMessage);
-    console.log(playersMessage);
+    //console.log(players.length);
 
-    // (optional) schedule next alarm in 5 minutes
     this.party.storage.setAlarm(Date.now() + 33);
   }
 }
