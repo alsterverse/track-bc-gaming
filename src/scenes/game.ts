@@ -246,7 +246,7 @@ export default class GameScene extends Phaser.Scene {
     });
 
     // game scene and platsforms
-    this.background = this.add.sprite(750, 400, "snowyBackground").setScale(3);
+    this.background = this.add.sprite(750, 400, "snowyBackground").setScale(4);
 
     this.anims.create({
       key: "snow",
@@ -263,15 +263,21 @@ export default class GameScene extends Phaser.Scene {
     //add new graphics ISSUE 9
 
     this.platforms = this.physics.add.staticGroup();
-    this.platforms.create(670, 750, "platform").setScale(7).refreshBody();
-    this.platforms.create(1100, 550, "platform");
-    this.platforms.create(550, 480, "platform_small");
-    this.platforms.create(1300, 200, "platform_small");
+    this.platforms.create(670, 1100, "platform").setScale(7).refreshBody();
+    this.platforms.create(1350, 550, "platform");
+    this.platforms.create(600, 480, "platform");
+    this.platforms.create(1450, 150, "platform_small");
     this.platforms.create(100, 300, "platform");
-    this.platforms.create(150, 530, "platform_small");
+    this.platforms.create(850, 650, "platform_small");
+    this.platforms.create(900, 800, "platform_small");
     this.platforms.create(790, 250, "platform_small");
     this.platforms.create(530, 150, "platform_small");
-    this.platforms.create(1200, 380, "platform");
+    this.platforms.create(1200, 300, "platform");
+    this.platforms.create(150, 900, "platform");
+    this.platforms.create(500, 750, "platform_small");
+    this.platforms.create(1600, 400, "platform_small");
+    this.platforms.create(1300, 900, "platform");
+    this.platforms.create(100, 600, "platform");
 
     // add socket.io / partykit for multiplayer, I guess you have to say that this.player should be pushed to some kind of service/server/thing
     // ISSUE 7
