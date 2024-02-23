@@ -18,6 +18,7 @@ type Player = {
   y: number;
   id: string;
   name: string;
+  score: number;
   direction: string;
   dead?: boolean;
 };
@@ -81,8 +82,8 @@ export default class GameScene extends Phaser.Scene {
     ids.push(`players`);
     this.otherPlayers.forEach((player) => {
       player.id !== partySocket.id
-        ? ids.push(`${player.name}`)
-        : ids.push(`${this.playerName}`);
+        ? ids.push(`${player.name}` + `: ${player.score}`)
+        : ids.push(`${this.playerName}` + `: ${this.score}`);
     });
     this.scoreBoard.setText(ids);
   }
@@ -137,6 +138,7 @@ export default class GameScene extends Phaser.Scene {
             x: this.player.x,
             y: this.player.y,
             name: this.playerName,
+            score: this.score,
             direction: this.player.anims.currentAnim.key,
             dead: this.dead,
           },
