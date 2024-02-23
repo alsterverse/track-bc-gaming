@@ -185,6 +185,9 @@ export default class GameScene extends Phaser.Scene {
           this.otherPlayerSprites.push(newSprite);
           this.physics.add.collider(this.player, newSprite);
           this.physics.add.collider(this.snowballs, newSprite);
+          if (this.otherPlayers[i].dead) {
+            newSprite.setTint(0xff0000);
+          }
         }
       }
     }
@@ -204,7 +207,10 @@ export default class GameScene extends Phaser.Scene {
             this.player.anims.play("turn");
             this.gameOver = true;
             new Audio("assets/game-over.mp3").play();
-            setTimeout(() => this.scene.start("game"), 2000);
+            setTimeout(() => {
+              this.scene.start("game");
+              this.dead = false;
+            }, 2000);
           });
         }
       }
