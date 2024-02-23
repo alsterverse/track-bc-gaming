@@ -10,6 +10,7 @@ type Player = {
   y: number;
   id: string;
   name: string;
+  score: number;
   direction: string;
   dead?: boolean;
 };
@@ -19,9 +20,10 @@ type Snowball = {
   x: number;
   y: number;
   id: string;
-  name: string;
-  direction: string;
-  dead?: boolean;
+  name: string; //this is only here because it has to be, it's not used for anything
+  score: number; //this is only here because it has to be, it's not used for anything
+  direction: string; //this is only here because it has to be, it's not used for anything
+  dead?: boolean; //this is only here because it has to be, it's not used for anything
 };
 let snowballs: Snowball[] = [];
 
@@ -38,7 +40,8 @@ export default class Server implements Party.Server {
       y: 0,
       id: conn.id,
       direction: "turn",
-      name: "playerName",
+      name: "player",
+      score: 0,
     });
     snowballs.push({
       x: 800,
@@ -46,6 +49,7 @@ export default class Server implements Party.Server {
       id: conn.id,
       direction: "right",
       name: "snowball",
+      score: 0,
     });
     console.log(
       `Connected:
@@ -71,6 +75,7 @@ export default class Server implements Party.Server {
           player.direction = msg.object.direction;
           player.dead = msg.object.dead;
           player.name = msg.object.name;
+          player.score = msg.object.score;
         }
       });
     } else if (msg.type === "snowballs") {
