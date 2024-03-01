@@ -10,6 +10,7 @@ type Player = {
   y: number;
   id: string;
   name: string;
+  score: number;
   direction: string;
   dead?: boolean;
 };
@@ -20,6 +21,7 @@ type Snowball = {
   y: number;
   id: string;
   name: string;
+  score?: number;
   direction: string;
   dead?: boolean;
 };
@@ -28,21 +30,18 @@ let snowballs: Snowball[] = [];
 export default class Server implements Party.Server {
   constructor(readonly party: Party.Party) {}
 
-  onStart() {
-    //set first alarm
-    this.party.storage.setAlarm(Date.now() + 33);
-  }
   onConnect(conn: Party.Connection, ctx: Party.ConnectionContext) {
     players.push({
-      x: 0,
+      x: Math.floor(Math.random() * 1000 + 100),
       y: 0,
       id: conn.id,
       direction: "turn",
       name: "playerName",
+      score: 0,
     });
     snowballs.push({
-      x: 800,
-      y: 800,
+      x: 0,
+      y: 0,
       id: conn.id,
       direction: "right",
       name: "snowball",
@@ -71,6 +70,7 @@ export default class Server implements Party.Server {
           player.direction = msg.object.direction;
           player.dead = msg.object.dead;
           player.name = msg.object.name;
+          player.score = msg.object.score;
         }
       });
     } else if (msg.type === "snowballs") {
@@ -81,18 +81,6 @@ export default class Server implements Party.Server {
         }
       });
     }
-  }
-
-  onAlarm() {
-    // one way to delete all players
-    // if (
-    //   players.length > 0 &&
-    //   players.find((player) => player.name === "deleteallplayers12345") !==
-    //     undefined
-    // ) {
-    //   players = [];
-    //   snowballs = [];
-    // }
 
     const playersMessage = JSON.stringify({
       type: "players",
@@ -105,9 +93,6 @@ export default class Server implements Party.Server {
 
     this.party.broadcast(playersMessage);
     this.party.broadcast(snowballsMessage);
-    //console.log(players.length);
-
-    this.party.storage.setAlarm(Date.now() + 33);
   }
 }
 

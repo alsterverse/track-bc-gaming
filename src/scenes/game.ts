@@ -18,6 +18,7 @@ type Player = {
   y: number;
   id: string;
   name: string;
+  score: number;
   direction: string;
   dead?: boolean;
 };
@@ -81,8 +82,8 @@ export default class GameScene extends Phaser.Scene {
     ids.push(`players`);
     this.otherPlayers.forEach((player) => {
       player.id !== partySocket.id
-        ? ids.push(`${player.name}`)
-        : ids.push(`${this.playerName}`);
+        ? ids.push(`${player.name} ${player.score}`)
+        : ids.push(`${this.playerName} ${this.score}`);
     });
     this.scoreBoard.setText(ids);
   }
@@ -124,8 +125,21 @@ export default class GameScene extends Phaser.Scene {
       ? snowball.setVelocityX(-500)
       : snowball.setVelocityX(500);
     this.physics.add.collider(this.snowballs, this.platforms, (snowball) => {
+      this.realSnowball.x = 0;
+      this.realSnowball.y = 0;
       snowball.destroy();
+      this.realSnowball.destroy();
     });
+    //this does not work, why?
+    this.physics.add.collider(this.snowballs, this.otherPlayerSprites, () => {
+      this.score++;
+    });
+    setTimeout(() => {
+      this.realSnowball.x = 0;
+      this.realSnowball.y = 0;
+      snowball.destroy();
+      this.realSnowball.destroy();
+    }, 3000);
   }
 
   sendPlayerData() {
@@ -139,6 +153,7 @@ export default class GameScene extends Phaser.Scene {
             name: this.playerName,
             direction: this.player.anims.currentAnim.key,
             dead: this.dead,
+            score: this.score,
           },
         })
       );
@@ -202,6 +217,7 @@ export default class GameScene extends Phaser.Scene {
           this.otherSnowballSprites.push(newSprite);
           this.physics.add.collider(this.player, newSprite, () => {
             this.dead = true;
+            this.score = 0;
             this.physics.pause();
             this.player.setTint(0xff0000);
             this.player.anims.play("turn");
@@ -289,7 +305,11 @@ export default class GameScene extends Phaser.Scene {
     // ISSUE 7
 
     // player dude
-    this.player = this.physics.add.sprite(375, 70, "man");
+    this.player = this.physics.add.sprite(
+      Math.floor(Math.random() * 1000 + 100),
+      70,
+      "man"
+    );
     this.player.setCollideWorldBounds(true);
 
     // this.cameras.main.setSize(200, 300);
