@@ -68,6 +68,7 @@ export default class GameScene extends Phaser.Scene {
   realSnowball: any;
   direction: string = "turn";
   canThrowSnowball: Boolean = true;
+  canScore: Boolean = true;
   playerName: string = "";
   playerNameTag: any;
   otherPlayerNameTags: any[] = [];
@@ -86,6 +87,18 @@ export default class GameScene extends Phaser.Scene {
         : ids.push(`${this.playerName} ${this.score}`);
     });
     this.scoreBoard.setText(ids);
+  }
+
+  updateScore() {
+    if (this.canScore) {
+      this.score++;
+      new Audio("assets/ping.mp3").play();
+      this.canScore = false;
+
+      setTimeout(() => {
+        this.canScore = true;
+      }, 2000);
+    }
   }
 
   updatePlayerNameTag() {
@@ -129,10 +142,6 @@ export default class GameScene extends Phaser.Scene {
       this.realSnowball.y = 0;
       snowball.destroy();
       this.realSnowball.destroy();
-    });
-    //this does not work, why?
-    this.physics.add.collider(this.snowballs, this.otherPlayerSprites, () => {
-      this.score++;
     });
     setTimeout(() => {
       this.realSnowball.x = 0;
@@ -199,7 +208,9 @@ export default class GameScene extends Phaser.Scene {
           newSprite.anims.play(this.otherPlayers[i].direction, true);
           this.otherPlayerSprites.push(newSprite);
           this.physics.add.collider(this.player, newSprite);
-          this.physics.add.collider(this.snowballs, newSprite);
+          this.physics.add.collider(this.snowballs, newSprite, () => {
+            this.updateScore();
+          });
           if (this.otherPlayers[i].dead) {
             newSprite.setTint(0xff0000);
           }
@@ -217,7 +228,6 @@ export default class GameScene extends Phaser.Scene {
           this.otherSnowballSprites.push(newSprite);
           this.physics.add.collider(this.player, newSprite, () => {
             this.dead = true;
-            this.score = 0;
             this.physics.pause();
             this.player.setTint(0xff0000);
             this.player.anims.play("turn");
