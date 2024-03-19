@@ -78,7 +78,13 @@ export default class GameScene extends Phaser.Scene {
       .sort((a: any, b: any) => b.score - a.score)
       .forEach((player) => {
         player.id !== partySocket.id
-          ? ids.push(`${player.name} ${player.score}`)
+          ? ids.push(
+              `${
+                player.name.length > 10
+                  ? player.name.substring(0, 10)
+                  : player.name
+              } ${player.score}`
+            )
           : ids.push(`${this.playerName} ${this.score}`);
       });
     this.scoreBoard.setText(ids);
@@ -113,9 +119,13 @@ export default class GameScene extends Phaser.Scene {
       this.otherPlayers.forEach((player) => {
         if (player.id !== partySocket.id) {
           const newTag = this.add.text(
-            player.x - player.name.length * 5,
+            player.name.length >= 10
+              ? player.x - 10 * 5
+              : player.x - player.name.length * 5,
             player.y + -48,
-            player.name
+            player.name.length >= 10
+              ? player.name.substring(0, 10)
+              : player.name
           );
           this.otherPlayerNameTags.push(newTag);
         }
