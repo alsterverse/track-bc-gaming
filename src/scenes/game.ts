@@ -53,12 +53,6 @@ export default class GameScene extends Phaser.Scene {
   snowballs: any;
   bombs: any;
   gameOver: Boolean = false;
-  left: any;
-  up: any;
-  right: any;
-  moveLeft: Boolean = false;
-  moveRight: Boolean = false;
-  moveUp: Boolean = false;
   otherPlayers: Player[] = [];
   otherPlayerSprites: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody[] = [];
   otherSnowballs: Snowball[] = [];
@@ -74,18 +68,19 @@ export default class GameScene extends Phaser.Scene {
   otherPlayerNameTags: any[] = [];
 
   init(data: any) {
-    console.log(data);
     this.playerName = data.name;
   }
 
   updateScoreBoard() {
     let ids = [] as string[];
     ids.push(`players`);
-    this.otherPlayers.forEach((player) => {
-      player.id !== partySocket.id
-        ? ids.push(`${player.name} ${player.score}`)
-        : ids.push(`${this.playerName} ${this.score}`);
-    });
+    this.otherPlayers
+      .sort((a: any, b: any) => b.score - a.score)
+      .forEach((player) => {
+        player.id !== partySocket.id
+          ? ids.push(`${player.name} ${player.score}`)
+          : ids.push(`${this.playerName} ${this.score}`);
+      });
     this.scoreBoard.setText(ids);
   }
 
@@ -108,6 +103,7 @@ export default class GameScene extends Phaser.Scene {
       this.player.y + -48,
       this.playerName
     );
+    this.playerNameTag.setTint(0x22ff22);
     if (this.otherPlayerNameTags && this.otherPlayerNameTags.length) {
       this.otherPlayerNameTags.forEach((tag) => {
         tag.destroy();
@@ -280,17 +276,17 @@ export default class GameScene extends Phaser.Scene {
     // game scene and platsforms
     this.background = this.add.sprite(750, 400, "snowyBackground").setScale(4);
 
-    this.anims.create({
-      key: "snow",
-      frames: this.anims.generateFrameNumbers("snowyBackground", {
-        start: 0,
-        end: 2,
-      }),
-      frameRate: 4,
-      repeat: 10000,
-    });
+    // this.anims.create({
+    //   key: "snow",
+    //   frames: this.anims.generateFrameNumbers("snowyBackground", {
+    //     start: 0,
+    //     end: 2,
+    //   }),
+    //   frameRate: 4,
+    //   repeat: 10000,
+    // });
 
-    this.background.anims.play("snow", true);
+    // this.background.anims.play("snow", true);
 
     //add new graphics ISSUE 9
 
@@ -348,12 +344,11 @@ export default class GameScene extends Phaser.Scene {
 
     this.anims.create({
       key: "jump",
-      frames: this.anims.generateFrameNumbers("man", { start: 36, end: 52 }),
+      frames: this.anims.generateFrameNumbers("man", { start: 36, end: 51 }),
       frameRate: 48,
       repeat: -1,
     });
 
-    this.scoreText = this.add.text(16, 16, "score: 0");
     this.scoreBoard = this.add.text(16, 32, "players");
     this.playerNameTag = this.add.text(this.player.x, this.player.y, "");
 
@@ -380,46 +375,41 @@ export default class GameScene extends Phaser.Scene {
 
   update() {
     this;
-    if (this.cursors.left.isDown || this.moveLeft) {
+    if (this.cursors.left.isDown) {
       this.player.setVelocityX(-325);
 
       this.direction = "left";
-    } else if (this.cursors.right.isDown || this.moveRight) {
+    } else if (this.cursors.right.isDown) {
       this.player.setVelocityX(325);
 
       this.direction = "right";
     } else {
       this.player.setVelocityX(0);
     }
-    if (
-      (this.cursors.up.isDown || this.moveUp) &&
-      this.player.body.touching.down
-    ) {
+    if (this.cursors.up.isDown && this.player.body.touching.down) {
       this.player.setVelocityY(-650).setGravityY(300);
       new Audio("assets/jump.mp3").play();
     }
 
     if (!this.player.body.touching.down) {
       this.player.anims.play("jump", true);
-    } else if (this.cursors.left.isDown || this.moveLeft) {
+    } else if (this.cursors.left.isDown) {
       this.player.anims.play("left", true);
-    } else if (this.cursors.right.isDown || this.moveRight) {
+    } else if (this.cursors.right.isDown) {
       this.player.anims.play("right", true);
     } else {
       this.player.anims.play("turn");
     }
 
-    this.updateScoreBoard();
-    this.updatePlayerNameTag();
-    this.sendPlayerData();
-    this.sendSnowballData();
-    // this.frame++;
-    // if (this.frame % 2 === 0) {
-
-    this.destroyAllSprites();
-    this.drawOtherSprites();
-
-    // }
-    // if (this.frame === 60) this.frame = 0;
+    this.frame++;
+    if (this.frame % 2 === 0) {
+      this.updateScoreBoard();
+      this.updatePlayerNameTag();
+      this.sendSnowballData();
+      this.sendPlayerData();
+      this.destroyAllSprites();
+      this.drawOtherSprites();
+    }
+    if (this.frame === 60) this.frame = 0;
   }
 }
