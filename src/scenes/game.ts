@@ -253,9 +253,9 @@ export default class GameScene extends Phaser.Scene {
     // load music and sounds ISSUE 11
     // this.load.audio("music", "assets/music.mp3");
 
-    this.load.spritesheet("snowyBackground", "assets/snow.png", {
-      frameWidth: 500,
-      frameHeight: 375,
+    this.load.spritesheet("bg", "assets/mexo.png", {
+      frameWidth: 2038,
+      frameHeight: 1528,
     });
     this.load.image("platform", "assets/ice_platform.png");
     this.load.image("platform_small", "assets/ice_platform_small.png");
@@ -284,7 +284,7 @@ export default class GameScene extends Phaser.Scene {
     });
 
     // game scene and platsforms
-    this.background = this.add.sprite(750, 400, "snowyBackground").setScale(4);
+    this.background = this.add.sprite(800, 290, "bg").setScale(1.5);
 
     // this.anims.create({
     //   key: "snow",
